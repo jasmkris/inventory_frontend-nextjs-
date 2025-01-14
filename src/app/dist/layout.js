@@ -2,7 +2,7 @@
 exports.__esModule = true;
 exports.metadata = void 0;
 var providers_1 = require("./providers");
-require("./globals.css");
+require("../globals.css");
 exports.metadata = {
     title: "Inventory Dashboard",
     description: "Inventory Dashboard"

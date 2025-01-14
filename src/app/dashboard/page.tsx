@@ -7,6 +7,8 @@ import { BiCube } from 'react-icons/bi';
 import { HiOutlineClock } from 'react-icons/hi';
 import { IoSettingsOutline, IoPerson } from 'react-icons/io5';
 import { useSession } from 'next-auth/react';
+import { HiOutlineClipboardList } from 'react-icons/hi';
+import { IoStatsChart } from 'react-icons/io5';
 import ProfileSettingsSidebar from '@/components/ProfileSettingsSidebar';
 import AccessManagementSidebar from '@/components/AccessManagementSidebar';
 
@@ -14,6 +16,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAccessManagementOpen, setIsAccessManagementOpen] = useState(false);
+  
   const { data: session } = useSession();
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
   const isManager = userRole === 'MANAGER';
@@ -165,7 +168,6 @@ export default function Dashboard() {
         }}
       />
 
-      {/* Access Management Sidebar */}
       <AccessManagementSidebar
         isOpen={isAccessManagementOpen}
         onClose={() => setIsAccessManagementOpen(false)}
