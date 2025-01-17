@@ -7,17 +7,29 @@ import { BiCube } from 'react-icons/bi';
 import { HiOutlineClock } from 'react-icons/hi';
 import { IoSettingsOutline, IoPerson } from 'react-icons/io5';
 import { useSession } from 'next-auth/react';
+<<<<<<< HEAD
 import ProfileSettingsSidebar from '@/components/ProfileSettingsSidebar';
 import AccessManagementSidebar from '@/components/AccessManagementSidebar';
 import { Plus } from 'lucide-react';
+=======
+import { HiOutlineClipboardList } from 'react-icons/hi';
+import { IoStatsChart } from 'react-icons/io5';
+import ProfileSettingsSidebar from '@/components/ProfileSettingsSidebar';
+import AccessManagementSidebar from '@/components/AccessManagementSidebar';
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAccessManagementOpen, setIsAccessManagementOpen] = useState(false);
+<<<<<<< HEAD
 
   const { data: session } = useSession();
   
+=======
+  
+  const { data: session } = useSession();
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
   const isManager = userRole === 'MANAGER';
 
@@ -62,6 +74,7 @@ export default function Dashboard() {
               <span>Access Management</span>
             </button>
           )}
+<<<<<<< HEAD
           {
             !(session === undefined || session === null || !session) && (
               <button
@@ -72,6 +85,14 @@ export default function Dashboard() {
               </button>
             )
           }
+=======
+          <button 
+            onClick={() => setIsSettingsOpen(true)} 
+            className="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <IoSettingsOutline className="w-6 h-6 text-gray-600" />
+          </button>
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
         </div>
       </div>
 
@@ -158,8 +179,13 @@ export default function Dashboard() {
       )}
 
       {/* Floating Action Button */}
+<<<<<<< HEAD
       <button className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
         <Plus className="h-6 w-6" />
+=======
+      <button className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
+        <span className="text-2xl">+</span>
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       </button>
 
       <ProfileSettingsSidebar

@@ -1,14 +1,21 @@
 'use client';
 
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
+=======
+import { useState } from 'react';
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 import Link from 'next/link';
 import { IoChevronBack, IoChevronForward, IoFilter } from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
 import { useSession } from 'next-auth/react';
+<<<<<<< HEAD
 import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { objectService, roomService } from '@/services/api';
+=======
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 interface Object {
   id: string;
@@ -22,6 +29,7 @@ export default function ObjectsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: session } = useSession();
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
+<<<<<<< HEAD
   const isManager = userRole === 'MANAGER';
 
   const { toast } = useToast();
@@ -106,6 +114,54 @@ export default function ObjectsPage() {
       setIsLoading(false);
     }
   };
+=======
+
+  // Mock data - replace with actual API call
+  const objects: Object[] = [
+    {
+      id: '1',
+      name: 'Power Tools Set',
+      category: 'Tools',
+      room: 'Main Garage',
+      quantity: 1,
+    },
+    {
+      id: '2',
+      name: 'Garden Equipment',
+      category: 'Garden',
+      room: 'Main Garage',
+      quantity: 3,
+    },
+    {
+      id: '3',
+      name: 'Spare Tires',
+      category: 'Automotive',
+      room: 'Main Garage',
+      quantity: 4,
+    },
+    {
+      id: '4',
+      name: 'Tool Box',
+      category: 'Tools',
+      room: 'Main Garage',
+      quantity: 2,
+    },
+    {
+      id: '5',
+      name: 'Lawn Mower',
+      category: 'Garden',
+      room: 'Main Garage',
+      quantity: 1,
+    },
+    {
+      id: '6',
+      name: 'Bordeaux 2015',
+      category: 'Red Wine',
+      room: 'Wine Cellar',
+      quantity: 12,
+    },
+  ];
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
   const filteredObjects = objects.filter(object =>
     object.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,6 +169,7 @@ export default function ObjectsPage() {
     object.room.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+<<<<<<< HEAD
   const handleCreateObject = async (objectData: {
     name: string;
     category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
@@ -142,6 +199,13 @@ export default function ObjectsPage() {
       {/* Back to Dashboard Link */}
       <Link
         href="/dashboard"
+=======
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      {/* Back to Dashboard Link */}
+      <Link 
+        href="/dashboard" 
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
         className="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6"
       >
         <IoChevronBack className="w-5 h-5 mr-1" />
@@ -173,7 +237,11 @@ export default function ObjectsPage() {
       {/* Objects List */}
       <div className="space-y-4">
         {filteredObjects.map((object) => (
+<<<<<<< HEAD
           <Link
+=======
+          <Link 
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             key={object.id}
             href={`/objects/${object.id}`}
             className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
@@ -207,6 +275,7 @@ export default function ObjectsPage() {
       </div>
 
       {/* Add Object Button */}
+<<<<<<< HEAD
       {/* Add Item Button (Only visible to managers) */}
       {isManager && (
         <button onClick={() => setIsCreateObjectModalOpen(true)} className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
@@ -261,6 +330,11 @@ export default function ObjectsPage() {
         onSubmit={handleCreateObject}
         roomId={selectedRoomId}
       /> */}
+=======
+      <button className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
+        <span className="text-2xl">+</span>
+      </button>
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
     </div>
   );
 } 

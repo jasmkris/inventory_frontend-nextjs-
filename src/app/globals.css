@@ -34,9 +34,12 @@
     --ring: 215 20.2% 65.1%;
  
     --radius: 0.5rem;
+<<<<<<< HEAD
  
     --warning: 48 96% 89%;
     --warning-foreground: 48 96% 10%;
+=======
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   }
 }
  
@@ -49,8 +52,11 @@
   }
 }
 
+<<<<<<< HEAD
 .dark {
   --warning: 48 96% 89%;
   --warning-foreground: 48 96% 10%;
 }
 
+=======
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be

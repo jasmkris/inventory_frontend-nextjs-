@@ -24,6 +24,11 @@ function Navigation() {
                     ? 'text-foreground font-bold'
                     : 'text-foreground/60') + " hover:text-foreground transition-colors" }, route.label))); })),
         React.createElement("div", { className: "flex gap-4" },
+<<<<<<< HEAD
             React.createElement(link_1["default"], { href: "/login", className: "flex items-center justify-center" }, "login"))));
+=======
+            React.createElement(link_1["default"], { href: "/login", className: "flex items-center justify-center" }, "login"),
+            React.createElement(link_1["default"], { href: "/register", className: "flex items-center justify-center" }, "signup"))));
+>>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 }
 exports["default"] = Navigation;
