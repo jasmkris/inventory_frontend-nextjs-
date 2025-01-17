@@ -1,20 +1,13 @@
 'use client';
 
-<<<<<<< HEAD
 import { useEffect, useState } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 import Image from 'next/image';
 import { IoClose } from 'react-icons/io5';
 import { FiUser, FiKey, FiLogOut, FiChevronRight } from 'react-icons/fi';
 import { signOut } from 'next-auth/react';
-<<<<<<< HEAD
 import { useRouter } from 'next/navigation';
 
 const imageURI = process.env.IMAGE_URL || 'http://localhost:5000';
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 interface ProfileSettingsSidebarProps {
   isOpen: boolean;
@@ -27,7 +20,6 @@ interface ProfileSettingsSidebarProps {
 }
 
 export default function ProfileSettingsSidebar({ isOpen, onClose, user }: ProfileSettingsSidebarProps) {
-<<<<<<< HEAD
 
   const router = useRouter();
   const handleLogout = async () => {
@@ -39,10 +31,6 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
     router.push(`${window.location.origin}/login`);
     // router.push('/login');
     // router.refresh();
-=======
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   };
 
   return (
@@ -57,14 +45,8 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
 
       {/* Sidebar */}
       <div
-<<<<<<< HEAD
         className={`fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
-=======
-        className={`fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       >
         <div className="p-6">
           {/* Header */}
@@ -83,11 +65,7 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
             <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
               {user.image ? (
                 <Image
-<<<<<<< HEAD
                   src={imageURI + user.image}
-=======
-                  src={user.image}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                   alt={user.name}
                   width={64}
                   height={64}

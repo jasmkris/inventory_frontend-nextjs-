@@ -19,7 +19,6 @@ export function LoginForm({ form, onSubmit, isLoading }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { register, formState: { errors } } = form;
 
-<<<<<<< HEAD
   // const handleSubmit = async (data: LoginFormData) => {
   //   try {
   //     await login(data.email, data.password);
@@ -35,23 +34,6 @@ export function LoginForm({ form, onSubmit, isLoading }: LoginFormProps) {
   //     });
   //   }
   // };
-=======
-  const handleSubmit = async (data: LoginFormData) => {
-    try {
-      await login(data.email, data.password);
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Invalid email or password',
-        variant: 'destructive',
-      });
-    }
-  };
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
   return (
     <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-6">
@@ -60,11 +42,7 @@ export function LoginForm({ form, onSubmit, isLoading }: LoginFormProps) {
         <p className="text-gray-600">Log in to manage your inventory</p>
       </div>
 
-<<<<<<< HEAD
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-=======
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
         <div className="space-y-2">
           <label className="text-sm font-medium">Email</label>
           <div className="relative">

@@ -1,6 +1,5 @@
 import { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-<<<<<<< HEAD
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXTAUTH_URL;
@@ -9,8 +8,6 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -21,7 +18,6 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-<<<<<<< HEAD
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -71,29 +67,6 @@ export const authOptions: AuthOptions = {
         session.user.name = token.name as string;
         session.user.role = token.role as string;
         session.token = token.accessToken as string; // Add token to session
-=======
-        // Add your authentication logic here
-        // Return null if user data could not be retrieved
-        // Return user object if authentication successful
-        return {
-          id: '1',
-          email: credentials?.email,
-          role: 'EMPLOYEE'  // or 'MANAGER'
-        };
-      }
-    })
-  ],
-  callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
-    },
-    session: async ({ session, token }) => {
-      if (session?.user) {
-        session.user.role = token.role as string;
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       }
       return session;
     },
@@ -101,10 +74,7 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: '/login',
   },
-<<<<<<< HEAD
   session: {
     strategy: 'jwt',
   },
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 }; 

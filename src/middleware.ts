@@ -31,7 +31,6 @@ export const config = {
     '/login',
     '/register',
   ],
-<<<<<<< HEAD
 }; 
 
 // import { NextResponse } from 'next/server';
@@ -97,6 +96,3 @@ export const config = {
 //     '/((?!api|_next/static|_next/image|favicon.ico).*)',
 //   ],
 // };
-=======
-}; 
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be

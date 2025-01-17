@@ -17,29 +17,18 @@ export default function Navigation() {
       <ul className="flex gap-4">
         {allRoutes.map((route) => (
           <li key={route.path}>
-<<<<<<< HEAD
             <Link
               href={route.path}
               className={`${pathname === route.path
                   ? 'text-foreground font-bold'
                   : 'text-foreground/60'
                 } hover:text-foreground transition-colors`}
-=======
-            <Link 
-              href={route.path}
-              className={`${
-                pathname === route.path 
-                  ? 'text-foreground font-bold' 
-                  : 'text-foreground/60'
-              } hover:text-foreground transition-colors`}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             >
               {route.label}
             </Link>
           </li>
         ))}
       </ul>
-<<<<<<< HEAD
       {
         (session === undefined || session === null || !session) && (
           <Link href="/login" className="flex items-center justify-center">
@@ -55,16 +44,6 @@ export default function Navigation() {
                 signup
         </Link> */}
       {/* </div> */}
-=======
-      <div className="flex gap-4">
-        <Link href="/login" className="flex items-center justify-center">
-                login
-        </Link>
-        <Link href="/register" className="flex items-center justify-center">
-                signup
-        </Link>
-      </div>
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
     </nav>
   );
 } 

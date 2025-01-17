@@ -27,10 +27,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
     const file = e.target.files?.[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-<<<<<<< HEAD
       form.setValue('selfie', file);
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       setPreviewSelfie(imageUrl);
     }
   };
@@ -74,7 +71,6 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
       }
     }
   };
-<<<<<<< HEAD
 // const handleCaptureSelfie = async () => {
 //   try {
 //     if (videoRef.current && streamRef.current) {
@@ -114,9 +110,6 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
 //     });
 //   }
 // };
-=======
-
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   return (
     <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-6">
       <div className="text-center mb-6">
@@ -235,11 +228,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
                     <button
                       type="button"
                       onClick={() => setPreviewSelfie(null)}
-<<<<<<< HEAD
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full flex items-center justify-center w-6 h-6"
-=======
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                     >
                       ×
                     </button>
@@ -252,10 +241,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
                 
                 <div className="flex gap-2">
                   <input
-<<<<<<< HEAD
                     // {...register('selfie', { value: previewSelfie })}
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                     type="file"
                     accept="image/*"
                     onChange={handleFileUpload}

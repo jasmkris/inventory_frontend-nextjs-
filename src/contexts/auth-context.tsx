@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Session } from 'next-auth';
 import { signIn, signOut } from 'next-auth/react';
 import type { LoginFormData, RegisterFormData } from '@/lib/validations/auth';
-<<<<<<< HEAD
 import { authService } from '@/services/api';
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 interface AuthContextType {
   user: Session['user'] | null;
@@ -36,10 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await session.json();
       setUser(data?.user ?? null);
     } catch (error) {
-<<<<<<< HEAD
       console.error('Error checking authentication:', error);
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       setUser(null);
     } finally {
       setLoading(false);
@@ -67,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-<<<<<<< HEAD
       // await signOut({ 
       //   redirect: false,
       //   callbackUrl: '/login'
@@ -78,11 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       setUser(null);
       router.push(`${window.location.origin}/login`);
-=======
-      await signOut({ redirect: false });
-      setUser(null);
-      router.push('/login');
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -90,7 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (userData: RegisterFormData) => {
     try {
-<<<<<<< HEAD
       // const response = await fetch('/api/auth/register', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
@@ -100,17 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // if (!response.ok) {
       //   throw new Error('Registration failed');
       // }
-=======
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
       await login(userData.email, userData.password);
     } catch (error) {

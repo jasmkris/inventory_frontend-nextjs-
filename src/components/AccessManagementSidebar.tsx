@@ -3,10 +3,7 @@
 import { useState } from 'react';
 import { IoClose, IoPerson } from 'react-icons/io5';
 import { FiCheck, FiX } from 'react-icons/fi';
-<<<<<<< HEAD
 import { useToast } from '@/hooks/use-toast';
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
 interface User {
   id: string;
@@ -27,11 +24,8 @@ export default function AccessManagementSidebar({
   onClose,
   currentUserRole,
 }: AccessManagementSidebarProps) {
-<<<<<<< HEAD
   const { toast } = useToast();
 
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   const [inviteLink, setInviteLink] = useState('');
   const [pendingUsers, setPendingUsers] = useState<User[]>([
     {
@@ -75,14 +69,11 @@ export default function AccessManagementSidebar({
 
   const handleCopyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
-<<<<<<< HEAD
     toast({
       title: "Copied",
       description: "Invite link copied to clipboard",
       variant: "success",
     });
-=======
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
   };
 
   const handleApproveUser = (userId: string) => {
@@ -118,14 +109,8 @@ export default function AccessManagementSidebar({
 
       {/* Sidebar */}
       <div
-<<<<<<< HEAD
         className={`fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
           } overflow-y-auto`}
-=======
-        className={`fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        } overflow-y-auto`}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
       >
         <div className="p-6">
           {/* Header */}
@@ -161,11 +146,7 @@ export default function AccessManagementSidebar({
                 />
                 <button
                   onClick={handleCopyInviteLink}
-<<<<<<< HEAD
                   className="p-2 text-blue-500 hover:text-blue-600 border border-blue-200 rounded-md"
-=======
-                  className="p-2 text-blue-500 hover:text-blue-600"
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                 >
                   Copy
                 </button>
@@ -190,21 +171,13 @@ export default function AccessManagementSidebar({
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApproveUser(user.id)}
-<<<<<<< HEAD
                       className="p-2 text-green-500 hover:bg-green-50 rounded-full bg-background border border-green-500"
-=======
-                      className="p-2 text-green-500 hover:bg-green-50 rounded-full"
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                     >
                       <FiCheck className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleRejectUser(user.id)}
-<<<<<<< HEAD
                       className="p-2 text-red-500 hover:bg-red-50 rounded-full bg-background border border-red-500"
-=======
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-full"
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                     >
                       <FiX className="w-5 h-5" />
                     </button>

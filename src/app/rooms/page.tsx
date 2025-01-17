@@ -1,10 +1,6 @@
 'use client';
 
-<<<<<<< HEAD
 import { useEffect, useState } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 import {
     Search,
     Filter,
@@ -30,7 +26,6 @@ import { RoomFilter } from '@/components/RoomFilter';
 import { RoomActions } from '@/components/RoomActions';
 import { LoadingState } from '@/components/LoadingState';
 import { ErrorState } from '@/components/ErrorState';
-<<<<<<< HEAD
 import { objectService, roomService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { CreateRoomModal } from '@/components/rooms/CreateRoomModal';
@@ -79,56 +74,10 @@ export default function RoomsPage() {
     };
 
     // Fetch rooms
-=======
-
-interface Room {
-    id: number;
-    name: string;
-    description: string;
-    items: {
-        id: number;
-        name: string;
-        category: string;
-        quantity: number;
-    }[];
-}
-
-export default function RoomsPage() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const { data: session } = useSession();
-    const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
-
-    // Mock data - replace with actual API call
-    const rooms: Room[] = [
-        {
-            id: 1,
-            name: 'Main Garage',
-            description: 'Main garage, basement level',
-            items: [
-                { id: 1, name: 'Power Tools Set', category: 'Tools', quantity: 1 },
-                { id: 2, name: 'Garden Equipment', category: 'Garden', quantity: 3 },
-                { id: 3, name: 'Spare Tires', category: 'Automotive', quantity: 4 },
-                { id: 4, name: 'Tool Box', category: 'Tools', quantity: 2 },
-                { id: 5, name: 'Lawn Mower', category: 'Garden', quantity: 1 },
-                { id: 6, name: 'Car Cleaning Kit', category: 'Automotive', quantity: 2 }
-            ]
-        },
-        // ... other rooms data
-    ];
-
-    // If you're fetching data from an API, use useEffect:
-    /*
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
     useEffect(() => {
         const fetchRooms = async () => {
             try {
                 setIsLoading(true);
-<<<<<<< HEAD
                 const data = await roomService.getRooms(searchTerm);
                 setRooms(data);
             } catch (err) {
@@ -138,13 +87,6 @@ export default function RoomsPage() {
                     description: "Failed to fetch rooms",
                     variant: "destructive",
                 });
-=======
-                // const response = await fetch('/api/rooms');
-                // const data = await response.json();
-                // setRooms(data);
-            } catch (err) {
-                setError('Failed to fetch rooms');
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             } finally {
                 setIsLoading(false);
             }
@@ -152,7 +94,6 @@ export default function RoomsPage() {
 
         fetchRooms();
     }, []);
-<<<<<<< HEAD
 
     const handleCreateRoom = async (roomData: { name: string; description?: string }) => {
         if (userRole !== 'MANAGER') {
@@ -240,21 +181,6 @@ export default function RoomsPage() {
         isLoading: boolean;
         error: string | null;
     }) => (
-=======
-    */
-
-    // Get unique categories
-    const categories = Array.from(
-        new Set(rooms.flatMap(room => room.items.map(item => item.category)))
-    );
-
-    // Filter items based on selected categories
-    const filteredItems = selectedRoom?.items.filter(item =>
-        selectedCategories.length === 0 || selectedCategories.includes(item.category)
-    );
-
-    const RoomsList = () => (
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
         <div className="h-full flex flex-col">
             <div className="p-4 border-b">
                 <div className="flex items-center mb-4">
@@ -278,11 +204,7 @@ export default function RoomsPage() {
                             placeholder="Search rooms..."
                             className="w-full pl-10 pr-4 py-2 border rounded-lg"
                             value={searchTerm}
-<<<<<<< HEAD
                             onChange={(e) => onSearchChange(e.target.value)}
-=======
-                            onChange={(e) => setSearchTerm(e.target.value)}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                         />
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     </div>
@@ -293,26 +215,15 @@ export default function RoomsPage() {
                         <Card
                             key={room.id}
                             className="hover:shadow-md transition-shadow cursor-pointer"
-<<<<<<< HEAD
                             onClick={() => { onSelectRoom(room); console.log(room, 'room'); fetchRoomObjects(room.id, searchTerm); }}
                         >
                             <CardContent className="p-4" onContextMenu={handleContextMenu}>
                                 <div key={room.id} className="flex items-center justify-between">
-=======
-                            onClick={() => setSelectedRoom(room)}
-                        >
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                                     <div>
                                         <h3 className="font-medium">{room.name}</h3>
                                         <p className="text-sm text-gray-500">{room.description}</p>
                                         <p className="text-sm text-gray-500 mt-1">
-<<<<<<< HEAD
                                             {room?._count?.objects} items
-=======
-                                            {room.items.length} items
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                                         </p>
                                     </div>
                                     <ChevronLeft className="h-5 w-5 text-gray-400 transform rotate-180" />
@@ -320,7 +231,6 @@ export default function RoomsPage() {
                             </CardContent>
                         </Card>
                     ))}
-<<<<<<< HEAD
                     {isMenuVisible && (
                         <div
                             style={{
@@ -363,14 +273,10 @@ export default function RoomsPage() {
                     onClose={() => setIsCreateModalOpen(false)}
                     onSubmit={handleCreateRoom}
                 />
-=======
-                </div>
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             </div>
         </div>
     );
 
-<<<<<<< HEAD
     const RoomDetail = ({ room, onBack, userRole }: {
         room: Room;
         onBack: () => void;
@@ -419,27 +325,11 @@ export default function RoomsPage() {
 
         return (
             <div className="h-full flex flex-col" onKeyDown={handleKeyDown}>
-=======
-    const RoomDetail = ({ room }: { room: Room }) => {
-        const [roomSearchTerm, setRoomSearchTerm] = useState('');
-
-        const filteredItems = room.items.filter(item =>
-            item.name.toLowerCase().includes(roomSearchTerm.toLowerCase()) ||
-            item.category.toLowerCase().includes(roomSearchTerm.toLowerCase())
-        );
-
-        return (
-            <div className="h-full flex flex-col">
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                 {/* Room Header */}
                 <div className="p-4 border-b">
                     <div className="flex items-center gap-4">
                         <button
-<<<<<<< HEAD
                             onClick={onBack}
-=======
-                            onClick={() => setSelectedRoom(null)}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                             className="p-2 hover:bg-gray-100 rounded-full"
                         >
                             <ChevronLeft className="h-6 w-6" />
@@ -487,13 +377,8 @@ export default function RoomsPage() {
 
                     {/* Items List */}
                     <div className="space-y-3">
-<<<<<<< HEAD
                         {objects?.map((item: any) => (
                             <Card key={item.name} className="hover:shadow-md transition-shadow">
-=======
-                        {filteredItems.map(item => (
-                            <Card key={item.id} className="hover:shadow-md transition-shadow">
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3">
@@ -514,7 +399,6 @@ export default function RoomsPage() {
                 </div>
 
                 {/* Add Item Button (Only visible to managers) */}
-<<<<<<< HEAD
                 {isManager && (
                     <button onClick={() => setIsCreateObjectModalOpen(true)} className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
                         <Plus className="h-6 w-6" />
@@ -528,19 +412,11 @@ export default function RoomsPage() {
                     onSubmit={handleCreateObject}
                 />
 
-=======
-                {userRole === 'MANAGER' && (
-                    <button className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
-                        <Plus className="h-6 w-6" />
-                    </button>
-                )}
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             </div>
         );
     };
 
     if (isLoading) return <LoadingState />;
-<<<<<<< HEAD
     if (error) return (
         // <ErrorState 
         //     message={error} 
@@ -555,14 +431,10 @@ export default function RoomsPage() {
             onRetry={() => window.location.reload()}
         />
     );
-=======
-    if (error) return <ErrorState message={error} onRetry={() => {/* Implement retry logic */}} />;
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
 
     return (
         <div className="min-h-screen bg-gray-50">
             {selectedRoom ? (
-<<<<<<< HEAD
                 <RoomDetail
                     room={selectedRoom}
                     onBack={() => setSelectedRoom(null)}
@@ -580,11 +452,6 @@ export default function RoomsPage() {
                     isLoading={isLoading}
                     error={error}
                 />
-=======
-                <RoomDetail room={selectedRoom} />
-            ) : (
-                <RoomsList />
->>>>>>> e8f13d079188d56eaced21503e0728eb2c3b82be
             )}
         </div>
     );
