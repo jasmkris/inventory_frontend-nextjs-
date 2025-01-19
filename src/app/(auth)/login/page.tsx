@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Camera, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +17,7 @@ import { RegistrationForm } from '@/components/auth/RegistrationForm';
 import axios from 'axios';
 import { useAuth } from '@/contexts/auth-context';
 
-const API_BASE_URL = process.env.NEXTAUTH_URL || 'http://44.233.151.27:10000/api';
+const API_BASE_URL = process.env.NEXTAUTH_URL || 'http://213.108.20.181:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

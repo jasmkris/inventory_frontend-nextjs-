@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://44.233.151.27:10000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://213.108.20.181:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
