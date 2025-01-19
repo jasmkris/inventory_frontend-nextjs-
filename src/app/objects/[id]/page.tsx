@@ -5,14 +5,18 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { IoChevronBack, IoPencil, IoTrash } from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
+import { objectService, roomService } from '@/services/api';
+import { LoadingState } from '@/components/LoadingState';
+import { useToast } from '@/hooks/use-toast';
 
 interface ObjectDetails {
   id: string;
   name: string;
-  category: string;
-  room: string;
+  category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
   quantity: number;
   description?: string;
+  roomId: string;
+  room: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,26 +27,18 @@ export default function ObjectDetailsPage() {
   const [object, setObject] = useState<ObjectDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedObject, setEditedObject] = useState<ObjectDetails | null>(null);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Replace with actual API call
     const fetchObject = async () => {
       try {
-        // const response = await fetch(`/api/objects/${params.id}`);
-        // const data = await response.json();
-        // setObject(data);
-        
-        // Mock data
-        setObject({
-          id: params.id as string,
-          name: 'Power Tools Set',
-          category: 'Tools',
-          room: 'Main Garage',
-          quantity: 1,
-          description: 'Complete set of power tools including drill, saw, and sander',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+        const response = await objectService.getObjectById(params.id as string);
+        setObject(response);
+
       } catch (error) {
         console.error('Error fetching object:', error);
       } finally {
@@ -53,9 +49,26 @@ export default function ObjectDetailsPage() {
     fetchObject();
   }, [params.id]);
 
+  useEffect(() => {
+    const fetchRooms = async () => {
+      const roomsData = await roomService.getRooms();
+      setRooms(roomsData);
+    };
+    fetchRooms();
+  }, []);
+
+  useEffect(() => {
+    if (object) {
+      setEditedObject({
+        ...object,
+        roomId: object.roomId || '',  // Ensure roomId is set
+      });
+    }
+  }, [object]);
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this object?')) return;
-    
+
     setIsDeleting(true);
     try {
       // await fetch(`/api/objects/${params.id}`, { method: 'DELETE' });
@@ -66,8 +79,58 @@ export default function ObjectDetailsPage() {
     }
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!editedObject) return;
+
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      Object.entries(editedObject).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+
+      // await objectService.updateObject(object?.id as string, formData);
+      // setObject(editedObject);
+      // setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Object updated successfully",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update object",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedObject(object);
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (field: keyof ObjectDetails, value: any) => {
+    setEditedObject(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
+  };
+
   if (isLoading) {
-    return <div className="p-4">Loading...</div>;
+    return <LoadingState />
   }
 
   if (!object) {
@@ -76,8 +139,8 @@ export default function ObjectDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <Link 
-        href="/objects" 
+      <Link
+        href="/objects"
         className="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6"
       >
         <IoChevronBack className="w-5 h-5 mr-1" />
@@ -100,13 +163,31 @@ export default function ObjectDetailsPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => router.push(`/objects/${object.id}/edit`)}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <IoPencil className="w-5 h-5" />
-            </button>
-            <button 
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  disabled={isLoading}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleEdit}
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <IoPencil className="w-5 h-5" />
+              </button>
+            )}
+            <button
               onClick={handleDelete}
               disabled={isDeleting}
               className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
@@ -117,38 +198,106 @@ export default function ObjectDetailsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="font-medium text-gray-900 mb-2">Details</h2>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm text-gray-500">Quantity</dt>
-                <dd className="text-gray-900">{object.quantity}</dd>
-              </div>
-              {object.description && (
-                <div>
-                  <dt className="text-sm text-gray-500">Description</dt>
-                  <dd className="text-gray-900">{object.description}</dd>
-                </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedObject?.name || ''}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              ) : (
+                <div className="text-gray-900">{object.name}</div>
               )}
-            </dl>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              {isEditing ? (
+                <select
+                  value={editedObject?.category || ''}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="CONSUMABLE">Consumable</option>
+                  <option value="TEXTILE">Textile</option>
+                  <option value="EQUIPMENT">Equipment</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              ) : (
+                <div className="text-gray-900">{object.category}</div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  min="1"
+                  value={editedObject?.quantity || 0}
+                  onChange={(e) => handleInputChange('quantity', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              ) : (
+                <div className="text-gray-900">{object.quantity}</div>
+              )}
+            </div>
           </div>
 
-          <div>
-            <h2 className="font-medium text-gray-900 mb-2">History</h2>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm text-gray-500">Created</dt>
-                <dd className="text-gray-900">
-                  {new Date(object.createdAt).toLocaleDateString()}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-500">Last Updated</dt>
-                <dd className="text-gray-900">
-                  {new Date(object.updatedAt).toLocaleDateString()}
-                </dd>
-              </div>
-            </dl>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              {isEditing ? (
+                <textarea
+                  value={editedObject?.description || ''}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+              ) : (
+                <div className="text-gray-900">{object.description || '-'}</div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
+              {isEditing ? (
+                <select
+                  value={editedObject?.roomId || ''}
+                  onChange={(e) => handleInputChange('roomId', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                >
+                  {rooms.map(room => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="text-gray-900">{object.room}</div>
+              )}
+            </div>
+
+            <div>
+              <h2 className="font-medium text-gray-900 mb-2">History</h2>
+              <dl className="space-y-2">
+                <div>
+                  <dt className="text-sm text-gray-500">Created</dt>
+                  <dd className="text-gray-900">
+                    {new Date(object.createdAt).toLocaleDateString()}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-500">Last Updated</dt>
+                  <dd className="text-gray-900">
+                    {new Date(object.updatedAt).toLocaleDateString()}
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </div>
         </div>
       </div>

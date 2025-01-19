@@ -9,6 +9,9 @@ import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { objectService, roomService } from '@/services/api';
+import { X } from 'lucide-react';
+import { Select } from '@/components/ui/select';
+import { LoadingState } from '@/components/LoadingState';
 
 interface Object {
   id: string;
@@ -26,6 +29,8 @@ export default function ObjectsPage() {
 
   const { toast } = useToast();
   const [isCreateObjectModalOpen, setIsCreateObjectModalOpen] = useState(false);
+  const [isCreateRoomId, setIsCreateRoomId] = useState(false);
+
   const [objects, setObjects] = useState<any[]>([]);
   const [roomsList, setRoomsList] = useState([]);
   const [roomsId, setRoomsId] = useState('');
@@ -34,12 +39,21 @@ export default function ObjectsPage() {
   const [name, setName] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
 
+    const getObjects = async () => {
+      const objects = await objectService.getObjects();
+      setObjects(objects as any);
+      setIsLoading(false);
+    }
+
+
   useEffect(() => {
+    setIsLoading(true);
     const fetchRooms = async () => {
       const rooms = await roomService.getRooms();
       setRoomsList(rooms as any);
     }
     fetchRooms();
+    getObjects();
   }, [])
 
   // Mock data - replace with actual API call
@@ -89,7 +103,8 @@ export default function ObjectsPage() {
   // ];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    console.log(selectedRoomId, 'selectedRoomId');
+    if (!selectedRoomId.trim()) {
       toast({
         title: "Error",
         description: "Object name is required",
@@ -97,7 +112,8 @@ export default function ObjectsPage() {
       });
       return;
     }
-
+    setIsCreateRoomId(false);
+    setIsCreateObjectModalOpen(true);
     try {
       setIsLoading(true);
     } catch (error) {
@@ -110,7 +126,7 @@ export default function ObjectsPage() {
   const filteredObjects = objects.filter(object =>
     object.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     object.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    object.room.toLowerCase().includes(searchQuery.toLowerCase())
+    object.roomName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCreateObject = async (objectData: {
@@ -121,21 +137,30 @@ export default function ObjectsPage() {
     description?: string;
   }) => {
     try {
+      setIsLoading(true);
       await objectService.createObject(objectData as any);
       toast({
         title: "Success",
         description: "Object created successfully",
       });
-
-      setObjects(prevObjects => [...prevObjects, objectData]);
+      getObjects();
+      // setObjects(prevObjects => [...prevObjects, objectData]);
     } catch (error) {
+      console.error('Failed to create object:', error);
       toast({
         title: "Error",
         description: "Failed to create object",
         variant: "destructive",
       });
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -190,7 +215,7 @@ export default function ObjectsPage() {
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <span>{object.category}</span>
                     <span className="mx-2">•</span>
-                    <span>{object.room}</span>
+                    <span>{object.roomName}</span>
                   </div>
                 </div>
               </div>
@@ -209,12 +234,12 @@ export default function ObjectsPage() {
       {/* Add Object Button */}
       {/* Add Item Button (Only visible to managers) */}
       {isManager && (
-        <button onClick={() => setIsCreateObjectModalOpen(true)} className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+        <button onClick={() => setIsCreateRoomId(true)} className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
           <Plus className="h-6 w-6" />
         </button>
       )}
 
-      {isCreateObjectModalOpen && (
+      {isCreateRoomId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
             {/* ... existing code ... */}
@@ -222,9 +247,15 @@ export default function ObjectsPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Room *
-                </label>
+                <div className="block text-sm font-medium text-gray-700">
+                  <h1 className='text-lg font-bold'>Select the Room</h1>
+                  <button
+                    onClick={() => { setIsCreateRoomId(false) }}
+                    className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
                 <select
                   value={selectedRoomId}
                   onChange={(e) => setSelectedRoomId(e.target.value)}
@@ -240,27 +271,24 @@ export default function ObjectsPage() {
                   ))}
                 </select>
               </div>
-
-              {/* ... rest of form fields ... */}
-
               <button
                 type="submit"
                 disabled={isLoading || !selectedRoomId}
                 className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating...' : 'Create Object'}
+                {isLoading ? 'Waiting...' : 'Continue'}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* <CreateObjectModal
+      <CreateObjectModal
         isOpen={isCreateObjectModalOpen}
         onClose={() => setIsCreateObjectModalOpen(false)}
         onSubmit={handleCreateObject}
         roomId={selectedRoomId}
-      /> */}
+      />
     </div>
   );
 } 

@@ -63,7 +63,8 @@ export default function AccessManagementSidebar({
 
   const handleGenerateInviteLink = () => {
     // Generate a unique invite link
-    const newLink = `${window.location.origin}/register?invite=${Date.now()}`;
+    // const newLink = `${window.location.origin}/register?invite=${Date.now()}`;
+    const newLink = `${window.location.origin}/login`;
     setInviteLink(newLink);
   };
 

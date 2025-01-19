@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://44.233.151.27:10000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -84,6 +84,10 @@ export const objectService = {
   createObject: async (objectData: FormData) => {
     console.log(objectData, 'objectData');
     const response = await api.post('/objects', objectData);
+    return response.data;
+  },
+  getObjectById: async (objectId: string) => {
+    const response = await api.get(`/objects/${objectId}`);
     return response.data;
   },
   // Add other object-related endpoints

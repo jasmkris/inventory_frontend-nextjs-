@@ -7,7 +7,7 @@ import { FiUser, FiKey, FiLogOut, FiChevronRight } from 'react-icons/fi';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-const imageURI = process.env.IMAGE_URL || 'http://localhost:5000';
+const imageURI = process.env.IMAGE_URL || 'http://44.233.151.27:10000';
 
 interface ProfileSettingsSidebarProps {
   isOpen: boolean;
