@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  // DialogTrigger,
 } from "@/components/ui/dialog";
 import { MoreVertical, Edit, Trash } from 'lucide-react';
 import { useState } from 'react';
@@ -16,7 +16,8 @@ interface RoomActionsProps {
   onDelete: () => void;
 }
 
-export function RoomActions({ roomId, onEdit, onDelete }: RoomActionsProps) {
+// export function RoomActions({ roomId, onEdit, onDelete }: RoomActionsProps) {
+export function RoomActions({ onEdit, onDelete }: RoomActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   return (

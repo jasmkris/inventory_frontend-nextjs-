@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { IoClose } from 'react-icons/io5';
 import { FiUser, FiKey, FiLogOut, FiChevronRight } from 'react-icons/fi';
@@ -8,7 +8,7 @@ import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const imageURI = process.env.IMAGE_URL || 'http://213.108.20.181:3000';
-console.log(imageURI, 'imageURI');
+
 interface ProfileSettingsSidebarProps {
   isOpen: boolean;
   onClose: () => void;

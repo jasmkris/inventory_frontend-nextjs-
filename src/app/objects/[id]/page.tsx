@@ -21,6 +21,11 @@ interface ObjectDetails {
   updatedAt: Date;
 }
 
+interface Room {
+  id: string;
+  name: string;
+}
+
 export default function ObjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,7 +34,7 @@ export default function ObjectDetailsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedObject, setEditedObject] = useState<ObjectDetails | null>(null);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,8 +44,9 @@ export default function ObjectDetailsPage() {
         const response = await objectService.getObjectById(params.id as string);
         setObject(response);
 
-      } catch (error) {
-        console.error('Error fetching object:', error);
+      } catch {
+        setIsLoading(false);
+        console.error('Error fetching object:');
       } finally {
         setIsLoading(false);
       }
@@ -103,7 +109,7 @@ export default function ObjectDetailsPage() {
         description: "Object updated successfully",
         variant: "success",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update object",
@@ -119,7 +125,7 @@ export default function ObjectDetailsPage() {
     setIsEditing(false);
   };
 
-  const handleInputChange = (field: keyof ObjectDetails, value: any) => {
+  const handleInputChange = (field: keyof ObjectDetails, value: string | number | 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER' | string) => {
     setEditedObject(prev => {
       if (!prev) return prev;
       return {
@@ -205,7 +211,7 @@ export default function ObjectDetailsPage() {
                 <input
                   type="text"
                   value={editedObject?.name || ''}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange('name', e.target.value as string)}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               ) : (
@@ -218,7 +224,7 @@ export default function ObjectDetailsPage() {
               {isEditing ? (
                 <select
                   value={editedObject?.category || ''}
-                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  onChange={(e) => handleInputChange('category', e.target.value as 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER')}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="CONSUMABLE">Consumable</option>
@@ -253,7 +259,7 @@ export default function ObjectDetailsPage() {
               {isEditing ? (
                 <textarea
                   value={editedObject?.description || ''}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) => handleInputChange('description', e.target.value as string)}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   rows={3}
                 />
@@ -267,7 +273,7 @@ export default function ObjectDetailsPage() {
               {isEditing ? (
                 <select
                   value={editedObject?.roomId || ''}
-                  onChange={(e) => handleInputChange('roomId', e.target.value)}
+                  onChange={(e) => handleInputChange('roomId', e.target.value as string)}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   {rooms.map(room => (

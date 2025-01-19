@@ -5,6 +5,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Eye, EyeOff, Camera, Loader2 } from 'lucide-react';
 import type { RegisterFormData } from '@/lib/validations/auth';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 interface RegistrationFormProps {
   form: UseFormReturn<RegisterFormData>;
@@ -40,7 +41,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
         videoRef.current.srcObject = stream;
       }
       setIsCameraOpen(true);
-    } catch (err) {
+    } catch {
       toast({
         title: "Error",
         description: "Unable to access camera",
@@ -220,8 +221,10 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
               <div className="flex flex-col items-center space-y-4">
                 {previewSelfie ? (
                   <div className="relative w-32 h-32">
-                    <img
+                    <Image
                       src={previewSelfie}
+                      width={100}
+                      height={100}
                       alt="Selfie preview"
                       className="w-full h-full object-cover rounded-full"
                     />

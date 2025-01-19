@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import type { LoginFormData } from '@/lib/validations/auth';
-import { useAuth } from '@/contexts/auth-context';
-import { useToast } from '@/hooks/use-toast';
+// import { useAuth } from '@/contexts/auth-context';
+// import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
   form: UseFormReturn<LoginFormData>;
@@ -14,8 +14,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ form, onSubmit, isLoading }: LoginFormProps) {
-  const { login } = useAuth();
-  const { toast } = useToast();
+  // const { login } = useAuth();
+  // const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const { register, formState: { errors } } = form;
 

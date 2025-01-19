@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 interface RoomFormData {
   name: string;
@@ -31,7 +31,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }: RoomFormPr
 
     try {
       await onSubmit(formData);
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);

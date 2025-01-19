@@ -63,26 +63,24 @@ const LoginPage = () => {
         description: "Logged in successfully",
       });
       await login(data.email, data.password);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        toast({
-          title: "Error",
-          description: "User not found",
-          variant: "destructive",
-        });
-      } else if (error.response?.status === 401) {
-        toast({
-          title: "warning",
-          description: "Not match password",
-          variant: "warning",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to login",
-          variant: "destructive",
-        });
-      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "User not found",
+        variant: "destructive",
+      });
+      // toast({
+      //   title: "warning",
+      //   description: "Not match password",
+      //   variant: "warning",
+      // });
+      // } else {
+      //   toast({
+      //     title: "Error",
+      //     description: "Failed to login",
+      //     variant: "destructive",
+      //   });
+      // }
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -118,21 +116,20 @@ const LoginPage = () => {
         title: "Success",
         description: "Account created successfully",
       });
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      if (error.response.status === 400) {
-        toast({
-          title: "warning",
-          description: "Email already exists",
-          variant: "warning",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to create account",
-          variant: "destructive",
-        });
-      }
+    } catch {
+      // if (error.response.status === 400) {
+      //   toast({
+      //     title: "warning",
+      //     description: "Email already exists",
+      //     variant: "warning",
+      //   });
+      // } else {
+      toast({
+        title: "Error",
+        description: "Failed to create account",
+        variant: "destructive",
+      });
+      // }
       setIsLoading(false);
     } finally {
       setIsLoading(false);

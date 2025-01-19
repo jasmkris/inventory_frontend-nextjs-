@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiEyeOff, FiCamera } from 'react-icons/fi';
 import { MdContentCopy } from 'react-icons/md';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -40,7 +41,7 @@ export default function RegisterPage() {
         videoRef.current.srcObject = stream;
       }
       setIsCameraOpen(true);
-    } catch (err) {
+    } catch {
       setError('Unable to access camera');
     }
   };
@@ -89,7 +90,7 @@ export default function RegisterPage() {
       // Implement your registration logic here
       // const response = await registerUser({ ...formData, selfieImage });
       router.push('/login');
-    } catch (error) {
+    } catch {
       setError('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -242,9 +243,11 @@ export default function RegisterPage() {
                 </div>
               ) : selfieImage ? (
                 <div className="relative w-full">
-                  <img
+                  <Image 
                     src={selfieImage}
                     alt="Selfie"
+                    width={400}
+                    height={300}
                     className="w-full rounded-lg"
                   />
                   <button

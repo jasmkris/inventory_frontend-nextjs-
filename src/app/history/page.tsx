@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { IoChevronBack, IoFilter } from 'react-icons/io5';
 import { BiTransfer, BiTrash, BiEdit } from 'react-icons/bi';
-import { useSession } from 'next-auth/react';
+// import { useSession } from 'next-auth/react';
 
 interface HistoryItem {
   id: string;
@@ -20,7 +20,7 @@ interface HistoryItem {
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
 
   // Mock data - replace with actual API call
   const historyItems: HistoryItem[] = [

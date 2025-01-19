@@ -9,3 +9,12 @@ export interface Room {
     objects: number;
   };
 } 
+
+export interface Object {
+  id: string;
+  name: string;
+  category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+  quantity: number;
+  description?: string;
+  roomId: string;
+}

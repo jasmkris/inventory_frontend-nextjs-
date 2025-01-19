@@ -6,12 +6,12 @@ import { IoChevronBack, IoFilter, IoEllipsisVertical } from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
 import { useSession } from 'next-auth/react';
 
-interface RoomItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-}
+// interface RoomItem {
+//   id: string;
+//   name: string;
+//   category: string;
+//   quantity: number;
+// }
 
 export default function RoomDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');

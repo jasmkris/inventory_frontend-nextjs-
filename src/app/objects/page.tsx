@@ -10,15 +10,20 @@ import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { objectService, roomService } from '@/services/api';
 import { X } from 'lucide-react';
-import { Select } from '@/components/ui/select';
+// import { Select } from '@/components/ui/select';
 import { LoadingState } from '@/components/LoadingState';
 
 interface Object {
   id: string;
   name: string;
   category: string;
-  room: string;
+  roomName: string;
   quantity: number;
+}
+
+interface Room {
+  id: string;
+  name: string;
 }
 
 export default function ObjectsPage() {
@@ -31,17 +36,17 @@ export default function ObjectsPage() {
   const [isCreateObjectModalOpen, setIsCreateObjectModalOpen] = useState(false);
   const [isCreateRoomId, setIsCreateRoomId] = useState(false);
 
-  const [objects, setObjects] = useState<any[]>([]);
-  const [roomsList, setRoomsList] = useState([]);
-  const [roomsId, setRoomsId] = useState('');
+  const [objects, setObjects] = useState<Object[]>([]);
+  const [roomsList, setRoomsList] = useState<Room[]>([]);
+  // const [roomsId, setRoomsId] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState('');
+  // const [name, setName] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
 
     const getObjects = async () => {
       const objects = await objectService.getObjects();
-      setObjects(objects as any);
+      setObjects(objects);
       setIsLoading(false);
     }
 
@@ -50,7 +55,7 @@ export default function ObjectsPage() {
     setIsLoading(true);
     const fetchRooms = async () => {
       const rooms = await roomService.getRooms();
-      setRoomsList(rooms as any);
+      setRoomsList(rooms);
     }
     fetchRooms();
     getObjects();
@@ -138,13 +143,16 @@ export default function ObjectsPage() {
   }) => {
     try {
       setIsLoading(true);
-      await objectService.createObject(objectData as any);
+      const formData = new FormData();
+      Object.entries(objectData).forEach(([key, value]) => {
+        if (value !== undefined) formData.append(key, value.toString());
+      });
+      await objectService.createObject(formData);
       toast({
         title: "Success",
         description: "Object created successfully",
       });
       getObjects();
-      // setObjects(prevObjects => [...prevObjects, objectData]);
     } catch (error) {
       console.error('Failed to create object:', error);
       toast({
@@ -264,9 +272,9 @@ export default function ObjectsPage() {
                   required
                 >
                   <option value="">Select a room</option>
-                  {roomsList.map((room: any) => (
-                    <option key={room.id} value={room.id}>
-                      {room.name}
+                  {roomsList.map((room: Room) => (
+                    <option key={room?.id} value={room?.id}>
+                      {room?.name}
                     </option>
                   ))}
                 </select>

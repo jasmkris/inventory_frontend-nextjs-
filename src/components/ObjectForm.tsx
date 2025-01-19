@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 interface ObjectFormData {
   name: string;
@@ -37,7 +37,7 @@ export default function ObjectForm({ initialData, onSubmit, onCancel }: ObjectFo
 
     try {
       await onSubmit(formData);
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);

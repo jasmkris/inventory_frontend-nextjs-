@@ -22,15 +22,15 @@ import {
 } from "@/components/ui/sheet";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { RoomFilter } from '@/components/RoomFilter';
-import { RoomActions } from '@/components/RoomActions';
+// import { RoomFilter } from '@/components/RoomFilter';
+// import { RoomActions } from '@/components/RoomActions';
 import { LoadingState } from '@/components/LoadingState';
 import { ErrorState } from '@/components/ErrorState';
 import { objectService, roomService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { CreateRoomModal } from '@/components/rooms/CreateRoomModal';
 import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
-import { any } from 'zod';
+// import { any } from 'zod';
 
 interface Room {
     id: string;
@@ -44,6 +44,18 @@ interface Room {
     };
 }
 
+interface Object {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    roomId: string;
+    description?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    room?: Room;
+}
+
 export default function RoomsPage() {
     const { data: session } = useSession();
     const { toast } = useToast();
@@ -53,6 +65,7 @@ export default function RoomsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [rooms, setRooms] = useState<Room[]>([]);
+    const [objects, setObjects] = useState<Object[]>([]);
     // const userRole = session?.user?.role || 'EMPLOYEE';
     const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
     const isManager = userRole === 'MANAGER';
@@ -80,7 +93,7 @@ export default function RoomsPage() {
                 setIsLoading(true);
                 const data = await roomService.getRooms(searchTerm);
                 setRooms(data);
-            } catch (err) {
+            } catch {
                 setError('Failed to fetch rooms');
                 toast({
                     title: "Error",
@@ -93,7 +106,7 @@ export default function RoomsPage() {
         };
 
         fetchRooms();
-    }, []);
+    }, [searchTerm, toast]);
 
     const handleCreateRoom = async (roomData: { name: string; description?: string }) => {
         if (userRole !== 'MANAGER') {
@@ -112,42 +125,43 @@ export default function RoomsPage() {
                 title: "Success",
                 description: "Room created successfully",
             });
-        } catch (error: any) {
+        } catch {
             toast({
                 title: "Error",
-                description: error.response?.data?.error || "Failed to create room",
+                description: "Failed to create room",
                 variant: "destructive",
             });
         }
     };
 
-    const handleDeleteRoom = async (roomId: string) => {
-        if (userRole !== 'MANAGER') {
-            toast({
-                title: "Error",
-                description: "Only managers can delete rooms",
-                variant: "warning",
-            });
-            return;
-        }
+    // const handleDeleteRoom = async (roomId: string) => {
+    //     if (userRole !== 'MANAGER') {
+    //         toast({
+    //             title: "Error",
+    //             description: "Only managers can delete rooms",
+    //             variant: "warning",
+    //         });
+    //         return;
+    //     }
 
-        try {
-            await roomService.deleteRoom(roomId);
-            setRooms(prev => prev.filter(room => room.id !== roomId));
-            toast({
-                title: "Success",
-                description: "Room deleted successfully",
-            });
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.response?.data?.error || "Failed to delete room",
-                variant: "destructive",
-            });
-        }
-    };
+    //     try {
+    //         await roomService.deleteRoom(roomId);
+    //         setRooms(prev => prev.filter(room => room.id !== roomId));
+    //         toast({
+    //             title: "Success",
+    //             description: "Room deleted successfully",
+    //         });
+    //     } catch {
+    //         toast({
+    //             title: "Error",
+    //             description: "Failed to delete room",
+    //             variant: "destructive",
+    //         });
+    //     }
+    // };
 
-    const [objects, setObjects] = useState<any[]>([]);
+    // const [objects, setObjects] = useState<any[]>([]);
+    
     const [isFetching, setIsFetching] = useState(false);
 
     const fetchRoomObjects = async (roomId: string, searchTerm: string) => {
@@ -155,7 +169,7 @@ export default function RoomsPage() {
             setIsFetching(true);
             const data = await roomService.getRoomObjects(roomId, searchTerm);
             setObjects(data);
-        } catch (error) {
+        } catch {
             toast({
                 title: "Error",
                 description: "Failed to fetch objects",
@@ -170,16 +184,15 @@ export default function RoomsPage() {
     //     fetchRoomObjects(selectedRoom?.id || '', searchTerm);
     // }, [selectedRoom?.id, searchTerm]);
 
-    const RoomsList = ({ rooms, onSelectRoom, onCreateRoom, onDeleteRoom, searchTerm, onSearchChange, userRole, isLoading, error }: {
+    // const RoomsList = ({ rooms, onSelectRoom, onCreateRoom, onDeleteRoom, searchTerm, onSearchChange, userRole, isLoading, error }: {
+    const RoomsList = ({ rooms, onSelectRoom, searchTerm, onSearchChange }: {
         rooms: Room[];
         onSelectRoom: (room: Room | null) => void;
-        onCreateRoom: (roomData: { name: string; description?: string }) => void;
-        onDeleteRoom: (roomId: string) => void;
         searchTerm: string;
         onSearchChange: (searchTerm: string) => void;
-        userRole: string;
-        isLoading: boolean;
-        error: string | null;
+        // userRole: string;
+        // isLoading: boolean;
+        // error: string | null;
     }) => (
         <div className="h-full flex flex-col">
             <div className="p-4 border-b">
@@ -277,10 +290,9 @@ export default function RoomsPage() {
         </div>
     );
 
-    const RoomDetail = ({ room, onBack, userRole }: {
+    const RoomDetail = ({ room, onBack }: {
         room: Room;
         onBack: () => void;
-        userRole: string;
     }) => {
         const [roomSearchTerm, setRoomSearchTerm] = useState('');
         const [isCreateObjectModalOpen, setIsCreateObjectModalOpen] = useState(false);
@@ -293,7 +305,11 @@ export default function RoomsPage() {
             description?: string;
         }) => {
             try {
-                await objectService.createObject(objectData as any);
+                const formData = new FormData();
+                Object.entries(objectData).forEach(([key, value]) => {
+                    if (value !== undefined) formData.append(key, value.toString());
+                });
+                await objectService.createObject(formData);
                 toast({
                     title: "Success",
                     description: "Object created successfully",
@@ -305,8 +321,8 @@ export default function RoomsPage() {
                             : item
                     )
                 );
-                setObjects(prevObjects => [...prevObjects, objectData]);
-            } catch (error) {
+                setObjects(prevObjects => [...prevObjects, objectData as unknown as Object]);
+            } catch {
                 toast({
                     title: "Error",
                     description: "Failed to create object",
@@ -377,7 +393,7 @@ export default function RoomsPage() {
 
                     {/* Items List */}
                     <div className="space-y-3">
-                        {objects?.map((item: any) => (
+                        {objects?.map((item: Object) => (
                             <Card key={item.name} className="hover:shadow-md transition-shadow">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">
@@ -438,19 +454,19 @@ export default function RoomsPage() {
                 <RoomDetail
                     room={selectedRoom}
                     onBack={() => setSelectedRoom(null)}
-                    userRole={userRole}
+                    // userRole={userRole}
                 />
             ) : (
                 <RoomsList
                     rooms={rooms}
                     onSelectRoom={setSelectedRoom}
-                    onCreateRoom={handleCreateRoom}
-                    onDeleteRoom={handleDeleteRoom}
+                    // onCreateRoom={handleCreateRoom}
+                    // onDeleteRoom={handleDeleteRoom}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
-                    userRole={userRole}
-                    isLoading={isLoading}
-                    error={error}
+                    // userRole={userRole}
+                    // isLoading={isLoading}
+                    // error={error}
                 />
             )}
         </div>

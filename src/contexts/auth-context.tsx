@@ -4,8 +4,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session } from 'next-auth';
 import { signIn, signOut } from 'next-auth/react';
-import type { LoginFormData, RegisterFormData } from '@/lib/validations/auth';
-import { authService } from '@/services/api';
+// import type { LoginFormData, RegisterFormData } from '@/lib/validations/auth';
+import type { RegisterFormData } from '@/lib/validations/auth';
+// import { authService } from '@/services/api';
 
 interface AuthContextType {
   user: Session['user'] | null;
