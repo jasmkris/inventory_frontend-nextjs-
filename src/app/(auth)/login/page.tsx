@@ -17,7 +17,7 @@ import { RegistrationForm } from '@/components/auth/RegistrationForm';
 import axios from 'axios';
 import { useAuth } from '@/contexts/auth-context';
 
-const API_BASE_URL = process.env.NEXTAUTH_URL || 'https://213.108.20.181/api';
+const API_BASE_URL = process.env.NEXTAUTH_URL || 'https://malonenace.ddns.net/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
