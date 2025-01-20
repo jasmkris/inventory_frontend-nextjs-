@@ -73,8 +73,10 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/login',
+    error: '/auth/error', // Add custom error page
   },
   session: {
     strategy: 'jwt',
   },
+  debug: process.env.NODE_ENV === 'development', // Enable debug logs in development
 }; 

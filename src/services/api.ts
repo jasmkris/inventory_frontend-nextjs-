@@ -6,6 +6,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://malonenace.ddns
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use(async (config) => {
@@ -15,6 +18,16 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Add error interceptor
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 // Auth services
 export const authService = {
   login: async (email: string, password: string) => {
