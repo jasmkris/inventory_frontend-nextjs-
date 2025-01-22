@@ -3,6 +3,7 @@ export interface Room {
   name: string;
   description?: string;
   isTransit: boolean;
+  items: Object[]; // remove this
   createdAt: Date;
   updatedAt: Date;
 }

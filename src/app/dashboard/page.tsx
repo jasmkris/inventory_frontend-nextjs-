@@ -144,7 +144,7 @@ export default function Dashboard() {
 
       {/* Only show Access card for managers */}
       {isManager && (
-        <Link href="#" onClick={() => setIsAccessManagementOpen(true)} className="block">
+        <Link href="#" onClick={() => setIsAccessManagementOpen(true)} className="block mt-10">
           <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 flex items-center justify-center bg-orange-100 rounded-full mb-4">

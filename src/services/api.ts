@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://malonenace.ddns.net/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    'Bearer': 'application/json',
   },
 });
 
@@ -23,8 +23,9 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   response => response,
   error => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
+    console.log('API Error:', error.response?.data || error.message);
+    return error.response?.data || error.message;
+    // return Promise.reject(error);
   }
 );
 
@@ -36,6 +37,25 @@ export const authService = {
   },
   register: async (userData: FormData) => {
     const response = await api.post('/auth/register', userData);
+    return response.data;
+  },
+};
+
+export const userService = {
+  getPendingUsers: async () => {
+    const response = await api.get('/users/all');
+    return response.data;
+  },
+  approveUser: async (userId: string) => {
+    const response = await api.put(`/users/approve/${userId}`);
+    return response.data;
+  },
+  rejectUser: async (userId: string) => {
+    const response = await api.delete(`/users/reject/${userId}`);
+    return response.data;
+  },
+  revokeAccess: async (userId: string) => {
+    const response = await api.put(`/users/revoke/${userId}`);
     return response.data;
   },
 };
@@ -67,7 +87,7 @@ export const roomService = {
     isTransit?: boolean;
   }) => {
     const response = await api.post('/rooms', roomData);
-    return response.data;
+    return response;
   },
 
   updateRoom: async (
@@ -79,12 +99,13 @@ export const roomService = {
     }
   ) => {
     const response = await api.put(`/rooms/${roomId}`, roomData);
-    return response.data;
+    return response;
   },
 
   deleteRoom: async (roomId: string) => {
     const response = await api.delete(`/rooms/${roomId}`);
-    return response.data;
+    console.log(response, 'response');
+    return response;
   },
 };
 
@@ -101,6 +122,18 @@ export const objectService = {
   },
   getObjectById: async (objectId: string) => {
     const response = await api.get(`/objects/${objectId}`);
+    return response.data;
+  },
+  allObjectsDelete: async (roomId: string) => {
+    const response = await api.delete(`/objects/all/${roomId}`);
+    return response;
+  },
+  multipleObjectsDelete: async (objectIds: string[]) => {
+    const response = await api.delete('/objects', { data: { objectIds } });
+    return response.data;
+  },
+  updateObject: async (objectId: string, objectData: any) => {
+    const response = await api.put(`/objects/${objectId}`, objectData);
     return response.data;
   },
   // Add other object-related endpoints

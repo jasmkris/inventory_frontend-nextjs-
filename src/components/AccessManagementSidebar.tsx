@@ -1,16 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IoClose, IoPerson } from 'react-icons/io5';
 import { FiCheck, FiX } from 'react-icons/fi';
 import { useToast } from '@/hooks/use-toast';
+import { userService } from '@/services/api';
+import { Skeleton } from "@/components/ui/skeleton";
+import NotData from '@/components/NotData';
 
 interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: 'MANAGER' | 'EMPLOYEE';
-  status: 'PENDING' | 'ACTIVE' | 'REJECTED';
+  isVerified: boolean;
+  photoUrl: string;
 }
 
 interface AccessManagementSidebarProps {
@@ -19,84 +24,122 @@ interface AccessManagementSidebarProps {
   currentUserRole: 'MANAGER' | 'EMPLOYEE';
 }
 
+const imageURI = process.env.NEXT_PUBLIC_IMAGE_URL;
+
 export default function AccessManagementSidebar({
   isOpen,
   onClose,
   currentUserRole,
 }: AccessManagementSidebarProps) {
   const { toast } = useToast();
-
+  const [isLoading, setIsLoading] = useState(true);
   const [inviteLink, setInviteLink] = useState('');
-  const [pendingUsers, setPendingUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'Alice Smith',
-      email: 'alice@example.com',
-      role: 'EMPLOYEE',
-      status: 'PENDING',
-    },
-    {
-      id: '2',
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
-      role: 'EMPLOYEE',
-      status: 'PENDING',
-    },
-  ]);
+  const [isInviteLinkCopied, setIsInviteLinkCopied] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+  const [activeUsers, setActiveUsers] = useState<User[]>([]);
+  const [isInviteButtonShown, setIsInviteButtonShown] = useState(false);
+  const [isPendingApprovalLoading, setIsPendingApprovalLoading] = useState(false);
 
-  const [activeUsers, setActiveUsers] = useState<User[]>([
-    {
-      id: '3',
-      name: 'Sarah Wilson',
-      email: 'sarah@example.com',
-      role: 'EMPLOYEE',
-      status: 'ACTIVE',
-    },
-    {
-      id: '4',
-      name: 'Mike Brown',
-      email: 'mike@example.com',
-      role: 'MANAGER',
-      status: 'ACTIVE',
-    },
-  ]);
+  const getPendingUsers = async () => {
+    const response = await userService.getPendingUsers();
+    if (response) {
+      setActiveUsers(response.filter((user: User) => user.isVerified === true));
+      setPendingUsers(response.filter((user: User) => user.isVerified === false));
+    }
+  };
+
+  useEffect(() => {
+    getPendingUsers().finally(() => setIsLoading(false));
+  }, []);
 
   const handleGenerateInviteLink = () => {
     // Generate a unique invite link
-    // const newLink = `${window.location.origin}/register?invite=${Date.now()}`;
-    const newLink = `${window.location.origin}/login`;
+    const newLink = `${window.location.origin}/login?invite=${Date.now()}`;
     setInviteLink(newLink);
+    setIsInviteLinkCopied(false);
+    setIsInviteButtonShown(!isInviteButtonShown);
   };
 
   const handleCopyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
-    toast({
-      title: "Copied",
-      description: "Invite link copied to clipboard",
-      variant: "success",
-    });
+    setIsInviteLinkCopied(true);
+    setTimeout(() => {
+      setIsInviteLinkCopied(false);
+    }, 1000);
   };
 
-  const handleApproveUser = (userId: string) => {
+  const [pendingUserId, setPendingUserId] = useState('');
+  const handleApproveUser = async (userId: string) => {
+    setPendingUserId(userId)
+    setIsPendingApprovalLoading(true);
+    await userService.approveUser(userId);
+    toast({
+      title: "Success",
+      description: "User approved successfully",
+    });
     setPendingUsers((prev) => prev.filter((user) => user.id !== userId));
     const approvedUser = pendingUsers.find((user) => user.id === userId);
     if (approvedUser) {
-      setActiveUsers((prev) => [...prev, { ...approvedUser, status: 'ACTIVE' }]);
+      setActiveUsers((prev) => [...prev, { ...approvedUser, isVerified: true }]);
     }
+    setIsPendingApprovalLoading(false);
+    setPendingUserId('');
   };
 
-  const handleRejectUser = (userId: string) => {
+  const [isRejectLoading, setIsRejectLoading] = useState(false);
+  const handleRejectUser = async (userId: string) => {
+    setPendingUserId(userId)
+    setIsRejectLoading(true);
+    await userService.rejectUser(userId);
+    toast({
+      title: "Success",
+      description: "User rejected successfully",
+    });
     setPendingUsers((prev) => prev.filter((user) => user.id !== userId));
+    setIsRejectLoading(false);
+    setPendingUserId('');
   };
 
-  const handleRevokeAccess = (userId: string) => {
-    setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
+  const [isRevokeLoading, setIsRevokeLoading] = useState(false);
+  const handleRevokeAccess = async (userId: string) => {
+    setPendingUserId(userId)
+    setIsRevokeLoading(true);
+    await userService.revokeAccess(userId);
+    toast({
+      title: "Success",
+      description: "User revoked successfully",
+    });
+    const revokedUser = await activeUsers.find((user) => user.id === userId);
+    if (revokedUser) {
+      setPendingUsers((prev) => [...prev, { ...revokedUser, isVerified: false }]);
+      setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
+    }
+    setIsRevokeLoading(false);
+    setPendingUserId('');
   };
 
   // Only managers can see and use this component
   if (currentUserRole !== 'MANAGER') {
     return null;
   }
+
+  const handleViewUser = (photoUrl: string) => {
+    window.open(imageURI + photoUrl, '_blank');
+  };
+
+  const UserSkeleton = () => (
+    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" /> {/* Name */}
+        <Skeleton className="h-3 w-40" /> {/* Email */}
+        <Skeleton className="h-3 w-24" /> {/* Role */}
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-8 rounded-full" /> {/* Approve button */}
+        <Skeleton className="h-8 w-8 rounded-full" /> {/* Reject button */}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -135,7 +178,7 @@ export default function AccessManagementSidebar({
           </button>
 
           {/* Invite Link Display */}
-          {inviteLink && (
+          {inviteLink && isInviteButtonShown && (
             <div className="mb-8 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600 mb-2">Invitation Link:</p>
               <div className="flex items-center gap-2">
@@ -147,9 +190,9 @@ export default function AccessManagementSidebar({
                 />
                 <button
                   onClick={handleCopyInviteLink}
-                  className="p-2 text-blue-500 hover:text-blue-600 border border-blue-200 rounded-md"
+                  className={`p-2 text-blue-500 h-[38px] flex items-center justify-center hover:text-blue-600 border border-blue-200 rounded-md ${isInviteLinkCopied ? 'bg-blue-500 text-white' : ''}`}
                 >
-                  Copy
+                  {isInviteLinkCopied ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>
@@ -159,32 +202,58 @@ export default function AccessManagementSidebar({
           <div className="mb-8">
             <h3 className="text-lg font-medium mb-4">Pending Access Requests</h3>
             <div className="space-y-4">
-              {pendingUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <p className="text-sm text-gray-500">{user.role}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleApproveUser(user.id)}
-                      className="p-2 text-green-500 hover:bg-green-50 rounded-full bg-background border border-green-500"
+              {isLoading ? (
+                <>
+                  <UserSkeleton />
+                  <UserSkeleton />
+                  <UserSkeleton />
+                </>
+              ) : pendingUsers.length === 0 ? (
+                <NotData />
+              ) : (
+                pendingUsers.map((user) => (
+                  isPendingApprovalLoading && pendingUserId === user.id ? (
+                    <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium animate-pulse animate-infinite animate-slow animate-ease-in-out animate-delay-1000 animate-repeat-1000">Approving...</p>
+                      </div>
+                    </div>
+                  ) : isRejectLoading && pendingUserId === user.id ? (
+                    <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium animate-pulse animate-infinite animate-slow animate-ease-in-out animate-delay-1000 animate-repeat-1000">Rejecting...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                     >
-                      <FiCheck className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleRejectUser(user.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-full bg-background border border-red-500"
-                    >
-                      <FiX className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      <div>
+                        <p className="font-medium text-red-600 cursor-pointer animate-pulse animate-infinite animate-slow animate-ease-in-out animate-delay-1000 animate-repeat-1000" onClick={() => handleViewUser(user.photoUrl)}>{user.firstName.toLocaleUpperCase()} {user.lastName.toLocaleUpperCase()}</p>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                        <p className="text-sm text-gray-500">{user.role}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveUser(user.id)}
+                          title='Approve user'
+                          className="p-2 text-green-500 hover:bg-green-50 rounded-full bg-background border border-green-500"
+                        >
+                          <FiCheck className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleRejectUser(user.id)}
+                          title='Reject and delete user'
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-full bg-background border border-red-500"
+                        >
+                          <FiX className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )
+              )}
             </div>
           </div>
 
@@ -192,26 +261,45 @@ export default function AccessManagementSidebar({
           <div>
             <h3 className="text-lg font-medium mb-4">Active Users</h3>
             <div className="space-y-4">
-              {activeUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <p className="text-sm text-gray-500">{user.role}</p>
-                  </div>
-                  {user.role !== 'MANAGER' && (
-                    <button
-                      onClick={() => handleRevokeAccess(user.id)}
-                      className="text-red-500 text-sm hover:text-red-600"
-                    >
-                      Revoke Access
-                    </button>
-                  )}
-                </div>
-              ))}
+              {isLoading ? (
+                <>
+                  <UserSkeleton />
+                  <UserSkeleton />
+                </>
+              ) : activeUsers.length === 0 ? (
+                <NotData />
+              ) : (
+                activeUsers.map((user) =>
+                  user.role === 'MANAGER' ?
+                    <div key={user.id}></div> :
+                    isRevokeLoading && pendingUserId === user.id ? (
+                      <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium animate-pulse animate-infinite animate-slow animate-ease-in-out animate-delay-1000 animate-repeat-1000">Revoking...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-blue-600 cursor-pointer animate-pulse animate-infinite animate-slow animate-ease-in-out animate-delay-1000 animate-repeat-1000" onClick={() => handleViewUser(user.photoUrl)}>{user.firstName.toLocaleUpperCase()} {user.lastName.toLocaleUpperCase()}</p>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                          <p className="text-sm text-gray-500">{user.role}</p>
+                        </div>
+                        {user.role === 'EMPLOYEE' && (
+                          <button
+                            onClick={() => handleRevokeAccess(user.id)}
+                            title='Revoke access'
+                            className="text-red-500 text-sm hover:text-red-600"
+                          >
+                            Revoke Access
+                          </button>
+                        )}
+                      </div>
+                    ))
+              )}
             </div>
           </div>
         </div>

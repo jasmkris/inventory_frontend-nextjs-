@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from "@/hooks/use-toast";
@@ -16,8 +16,9 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { RegistrationForm } from '@/components/auth/RegistrationForm';
 import axios from 'axios';
 import { useAuth } from '@/contexts/auth-context';
+import { useSearchParams } from 'next/navigation';
 
-const API_BASE_URL = process.env.NEXTAUTH_URL || 'https://malonenace.ddns.net/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,6 +29,9 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login, register } = useAuth();
+
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("login");
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -52,36 +56,20 @@ const LoginPage = () => {
   const onLoginSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
-      // Add your login API call here
-      console.log(data, 'login data');
       const response = await api.post('/auth/login', data);
-      if (!response) {
-        throw new Error('Login failed');
+      if (response.data) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+        await login(data.email, data.password);
       }
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-      await login(data.email, data.password);
-    } catch {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "User not found",
+        description: error.response.data.error,
         variant: "destructive",
       });
-      // toast({
-      //   title: "warning",
-      //   description: "Not match password",
-      //   variant: "warning",
-      // });
-      // } else {
-      //   toast({
-      //     title: "Error",
-      //     description: "Failed to login",
-      //     variant: "destructive",
-      //   });
-      // }
-      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -136,10 +124,18 @@ const LoginPage = () => {
     }
   };
 
+  useEffect(() => {
+    // Check for invite parameter and switch to register tab
+    const inviteParam = searchParams.get('invite');
+    if (inviteParam) {
+      setActiveTab("register");
+    }
+  }, [searchParams]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 flex flex-col">
       <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="login" disabled={isLoading}>Login</TabsTrigger>
             <TabsTrigger value="register" disabled={isLoading}>Register</TabsTrigger>

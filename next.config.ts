@@ -2,12 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['malonenace.ddns.net'], // Add your backend domain here
+    domains: ['localhost:5000'], // Add your backend domain here
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'malonenace.ddns.net',
-        port: '',
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
         pathname: '/uploads/**',
       },
     ],

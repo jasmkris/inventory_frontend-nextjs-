@@ -18,23 +18,7 @@ export function LoginForm({ form, onSubmit, isLoading }: LoginFormProps) {
   // const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const { register, formState: { errors } } = form;
-
-  // const handleSubmit = async (data: LoginFormData) => {
-  //   try {
-  //     await login(data.email, data.password);
-  //     toast({
-  //       title: 'Success',
-  //       description: 'Logged in successfully',
-  //     });
-  //   } catch (error) {
-  //     toast({
-  //       title: 'Error',
-  //       description: 'Invalid email or password',
-  //       variant: 'destructive',
-  //     });
-  //   }
-  // };
-
+    
   return (
     <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-6">
       <div className="text-center mb-6">

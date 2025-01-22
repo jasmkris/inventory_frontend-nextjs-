@@ -1,125 +1,174 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { IoChevronBack, IoFilter, IoEllipsisVertical } from 'react-icons/io5';
-import { BiCube } from 'react-icons/bi';
-import { useSession } from 'next-auth/react';
-
-// interface RoomItem {
-//   id: string;
-//   name: string;
-//   category: string;
-//   quantity: number;
-// }
+import { IoChevronBack } from 'react-icons/io5';
+import { useToast } from '@/hooks/use-toast';
+import { roomService } from '@/services/api';
+import type { Room } from '@/types';
+import { LoadingState } from '@/components/LoadingState';
+import { NotFound } from '@/components/NotFound';
 
 export default function RoomDetailPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const { data: session } = useSession();
-  const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
+  const params = useParams();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [room, setRoom] = useState<Room | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editedRoom, setEditedRoom] = useState<Partial<Room>>({});
 
-  // Mock data - replace with actual API call
-  const roomData = {
-    name: 'Main Garage',
-    description: 'Main garage, basement level',
-    items: [
-      { id: '1', name: 'Power Tools Set', category: 'Tools', quantity: 1 },
-      { id: '2', name: 'Garden Equipment', category: 'Garden', quantity: 3 },
-      { id: '3', name: 'Spare Tires', category: 'Automotive', quantity: 4 },
-      { id: '4', name: 'Tool Box', category: 'Tools', quantity: 2 },
-      { id: '5', name: 'Lawn Mower', category: 'Garden', quantity: 1 },
-      { id: '6', name: 'Car Cleaning Kit', category: 'Automotive', quantity: 2 },
-    ],
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const data = await roomService.getRoomById(params.id as string);
+        setRoom(data);
+        setEditedRoom(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch room details",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoom();
+  }, [params.id, toast]);
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await roomService.updateRoom(params.id as string, editedRoom);
+      if (response.error) {
+        toast({
+          title: "Error",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: response.data.message ? response.data.message : response?.error,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update room",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const filteredItems = roomData.items.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (isLoading) return <LoadingState />;
+  if (!room) return <NotFound />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link 
-                href="/rooms" 
-                className="mr-4 text-gray-600 hover:text-gray-900"
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <Link href="/rooms" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+        <IoChevronBack className="w-5 h-5 mr-1" />
+        Back to Rooms
+      </Link>
+
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isEditing ? (
+              <input
+                type="text"
+                value={editedRoom.name}
+                onChange={(e) => setEditedRoom({ ...editedRoom, name: e.target.value })}
+                className="border rounded px-2 py-1"
+              />
+            ) : (
+              room.name
+            )}
+          </h1>
+          <div className="space-x-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditedRoom(room);
+                    setIsEditing(false);
+                  }}
+                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
               >
-                <IoChevronBack className="w-6 h-6" />
-              </Link>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{roomData.name}</h1>
-                <p className="text-sm text-gray-600">{roomData.description}</p>
-              </div>
-            </div>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
-              <IoEllipsisVertical className="w-6 h-6 text-gray-600" />
-            </button>
+                Edit
+              </button>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Search and Filter */}
-      <div className="px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-            <IoFilter className="w-6 h-6 text-gray-600" />
-          </button>
-        </div>
-      </div>
-
-      {/* Items List */}
-      <div className="px-4 sm:px-6 lg:px-8 py-4">
         <div className="space-y-4">
-          {filteredItems.map((item) => (
-            <Link
-              key={item.id}
-              href={`/objects/${item.id}`}
-              className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="p-4 sm:p-6 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <BiCube className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {item.name}
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      {item.category}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">
-                    Qty: <span className="text-gray-900 font-medium">{item.quantity}</span>
-                  </div>
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            {isEditing ? (
+              <textarea
+                value={editedRoom.description || ''}
+                onChange={(e) => setEditedRoom({ ...editedRoom, description: e.target.value })}
+                className="mt-1 block w-full border rounded-md shadow-sm"
+                rows={3}
+              />
+            ) : (
+              <p className="mt-1 text-gray-900">{room.description || '-'}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Transit Room</label>
+            {isEditing ? (
+              <input
+                type="checkbox"
+                checked={editedRoom.isTransit}
+                onChange={(e) => setEditedRoom({ ...editedRoom, isTransit: e.target.checked })}
+                className="mt-1 rounded border-gray-300"
+              />
+            ) : (
+              <p className="mt-1 text-gray-900">{room.isTransit ? 'Yes' : 'No'}</p>
+            )}
+          </div>
+
+          <div>
+            <h2 className="font-medium text-gray-900">Details</h2>
+            <dl className="mt-2 space-y-2">
+              <div>
+                <dt className="text-sm text-gray-500">Created</dt>
+                <dd className="text-gray-900">
+                  {new Date(room.createdAt).toLocaleDateString()}
+                </dd>
               </div>
-            </Link>
-          ))}
+              <div>
+                <dt className="text-sm text-gray-500">Last Updated</dt>
+                <dd className="text-gray-900">
+                  {new Date(room.updatedAt).toLocaleDateString()}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </div>
-
-      {/* Add Item Button (Only visible to managers) */}
-      {userRole === 'MANAGER' && (
-        <button className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
-          <span className="text-2xl">+</span>
-        </button>
-      )}
     </div>
   );
 } 

@@ -7,7 +7,7 @@ import { FiUser, FiKey, FiLogOut, FiChevronRight } from 'react-icons/fi';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-const imageURI = process.env.IMAGE_URL || 'https://malonenace.ddns.net';
+const imageURI = process.env.NEXT_PUBLIC_IMAGE_URL;
 
 interface ProfileSettingsSidebarProps {
   isOpen: boolean;
@@ -20,7 +20,6 @@ interface ProfileSettingsSidebarProps {
 }
 
 export default function ProfileSettingsSidebar({ isOpen, onClose, user }: ProfileSettingsSidebarProps) {
-
   const router = useRouter();
   const handleLogout = async () => {
     // await signOut({ callbackUrl: `${window.location.origin}/login` });
@@ -63,7 +62,7 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
           {/* Profile Info */}
           <div className="flex items-center gap-4 mb-8">
             <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-              {user.image ? (
+              {user.image  ? (
                 <Image
                   src={imageURI + user.image}
                   alt={user.name}

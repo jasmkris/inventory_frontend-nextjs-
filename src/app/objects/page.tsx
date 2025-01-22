@@ -10,8 +10,8 @@ import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { objectService, roomService } from '@/services/api';
 import { X } from 'lucide-react';
-// import { Select } from '@/components/ui/select';
 import { LoadingState } from '@/components/LoadingState';
+import NotData from '@/components/NotData';
 
 interface Object {
   id: string;
@@ -44,11 +44,11 @@ export default function ObjectsPage() {
   // const [name, setName] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
 
-    const getObjects = async () => {
-      const objects = await objectService.getObjects();
-      setObjects(objects);
-      setIsLoading(false);
-    }
+  const getObjects = async () => {
+    const objects = await objectService.getObjects();
+    setObjects(objects);
+    setIsLoading(false);
+  }
 
 
   useEffect(() => {
@@ -205,38 +205,42 @@ export default function ObjectsPage() {
 
       {/* Objects List */}
       <div className="space-y-4">
-        {filteredObjects.map((object) => (
-          <Link
-            key={object.id}
-            href={`/objects/${object.id}`}
-            className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="p-4 sm:p-6 flex items-center justify-between">
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <BiCube className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {object.name}
-                  </h2>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <span>{object.category}</span>
-                    <span className="mx-2">•</span>
-                    <span>{object.roomName}</span>
+        {filteredObjects.length === 0 ? (
+          <NotData />
+        ) : (
+          filteredObjects.map((object) => (
+            <Link
+              key={object.id}
+              href={`/objects/${object.id}`}
+              className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="p-4 sm:p-6 flex items-center justify-between">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BiCube className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {object.name}
+                    </h2>
+                    <div className="flex items-center text-sm text-gray-600 mt-1">
+                      <span>{object.category}</span>
+                      <span className="mx-2">•</span>
+                      <span>{object.roomName}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <span className="text-sm text-gray-500">Qty: </span>
-                  <span className="font-medium">{object.quantity}</span>
+                <div className="flex items-center space-x-4">
+                  <div className="text-right">
+                    <span className="text-sm text-gray-500">Qty: </span>
+                    <span className="font-medium">{object.quantity}</span>
+                  </div>
+                  <IoChevronForward className="w-5 h-5 text-gray-400" />
                 </div>
-                <IoChevronForward className="w-5 h-5 text-gray-400" />
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))
+        )}
       </div>
 
       {/* Add Object Button */}
