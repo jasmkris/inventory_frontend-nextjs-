@@ -65,6 +65,7 @@ export const authOptions: AuthOptions = {
         token.email = user.email;
         token.name = user.name;
         token.role = user.role;
+        token.image = user.image;
         token.accessToken = user.token; // Save token to JWT
       }
       return token;
@@ -75,6 +76,7 @@ export const authOptions: AuthOptions = {
         session.user.email = token.email as string;
         session.user.name = token.name as string;
         session.user.role = token.role as string;
+        session.user.image = token.image as string;
         session.token = token.accessToken as string; // Add token to session
       }
       return session;

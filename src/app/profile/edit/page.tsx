@@ -157,7 +157,7 @@ export default function EditProfilePage() {
 
     return (
         <div className="container max-w-2xl py-8 min-h-screen min-w-full flex justify-center items-center">
-            <Card className="mx-10 max-w-2xl">
+            <Card className="mx-10 max-w-2xl w-2xl">
                 <CardHeader>
                     <CardTitle>Edit Profile</CardTitle>
                 </CardHeader>
