@@ -58,6 +58,14 @@ export const userService = {
     const response = await api.put(`/users/revoke/${userId}`);
     return response.data;
   },
+  uploadProfileImage: async (formData: FormData) => {
+    const response = await api.post('/users/profile/photo', formData);
+    return response.data;
+  },
+  updateProfile: async (data: any) => {
+    const response = await api.put('/users/profile', data);
+    return response;
+  },
 };
 
 // Room services
@@ -81,9 +89,9 @@ export const roomService = {
     return response.data;
   },
 
-  createRoom: async (roomData: { 
-    name: string; 
-    description?: string; 
+  createRoom: async (roomData: {
+    name: string;
+    description?: string;
     isTransit?: boolean;
   }) => {
     const response = await api.post('/rooms', roomData);
@@ -91,7 +99,7 @@ export const roomService = {
   },
 
   updateRoom: async (
-    roomId: string, 
+    roomId: string,
     roomData: {
       name?: string;
       description?: string;

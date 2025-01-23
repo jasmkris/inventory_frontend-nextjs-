@@ -62,7 +62,7 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
           {/* Profile Info */}
           <div className="flex items-center gap-4 mb-8">
             <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-              {user.image  ? (
+              {user.image ? (
                 <Image
                   src={imageURI + user.image}
                   alt={user.name}
@@ -79,28 +79,28 @@ export default function ProfileSettingsSidebar({ isOpen, onClose, user }: Profil
               )}
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">{user.name}</h3>
+              <h3 className="font-medium text-gray-900">{user.name.toUpperCase()}</h3>
               <p className="text-gray-600 text-sm">{user.email}</p>
             </div>
           </div>
 
           {/* Menu Items */}
           <div className="space-y-2">
-            <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="flex items-center gap-3">
+            <button onClick={() => { router.push('/profile/edit') }} className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div className="flex items-center gap-3" >
                 <FiUser className="w-5 h-5 text-gray-500" />
                 <span>Edit Profile</span>
               </div>
               <FiChevronRight className="w-5 h-5 text-gray-400" />
             </button>
 
-            <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+            {/* <button className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
               <div className="flex items-center gap-3">
                 <FiKey className="w-5 h-5 text-gray-500" />
                 <span>Change Password</span>
               </div>
               <FiChevronRight className="w-5 h-5 text-gray-400" />
-            </button>
+            </button> */}
 
             <button
               onClick={handleLogout}

@@ -31,7 +31,7 @@ export const authOptions: AuthOptions = {
             password: credentials?.password
           }
           const response = await api.post('/auth/login', data);
-          
+
           if (response.status === 200) {
             return {
               id: response.data?.user?.id,
@@ -50,7 +50,16 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session?.user) {
+        // Return previous token with updated user data
+        console.log('session user', session);
+        return {
+          ...token,
+          name: session.user.name,
+          image: session.user.image,
+        };
+      }
       if (user) {
         token.id = user.id;
         token.email = user.email;

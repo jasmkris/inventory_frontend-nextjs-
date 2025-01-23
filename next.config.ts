@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['localhost:5000'], // Add your backend domain here
+    domains: ['localhost'], // Add your backend domain here
     remotePatterns: [
       {
         protocol: 'http',

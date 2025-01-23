@@ -77,6 +77,22 @@ const LoginPage = () => {
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
+      if (data.password !== data.confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (data.selfie === null) {
+        toast({
+          title: "Error",
+          description: "Selfie is required",
+          variant: "destructive",
+        });
+        return;
+      }
       setIsLoading(true);
       // Create FormData object
       const formData = new FormData();
