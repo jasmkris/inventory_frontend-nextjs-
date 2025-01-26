@@ -9,13 +9,15 @@ import { IoSettingsOutline, IoPerson } from 'react-icons/io5';
 import { useSession } from 'next-auth/react';
 import ProfileSettingsSidebar from '@/components/ProfileSettingsSidebar';
 import AccessManagementSidebar from '@/components/AccessManagementSidebar';
-import { Plus, RefreshCw, UserPlus, LogIn, User } from 'lucide-react';
+import { RefreshCw, UserPlus, LogIn, User } from 'lucide-react';
 import axios from 'axios';
 import NotData from '@/components/NotData';
 import { DashboardLoadingState } from '@/components/LoadingState';
 import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
 import { eventEmitter, EVENTS } from '@/lib/eventEmitter';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SearchModal } from '@/components/SearchModal';
+import { useRouter } from 'next/navigation';
 
 const historyApi = process.env.NEXT_PUBLIC_API_URL;
 const api = axios.create({
@@ -73,6 +75,7 @@ export default function Dashboard() {
   const [isHovered, setIsHovered] = useState(false);
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
   const isManager = userRole === 'MANAGER';
+  const router = useRouter();
 
   const handleAccessManagementClick = () => {
     console.log('Access Management clicked'); // Debug log
@@ -99,6 +102,14 @@ export default function Dashboard() {
     getHistory();
   }, []);
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleSearch = (id: string, type: 'objects' | 'rooms') => {
+    console.log('Selected:', id, type);
+    // Handle the selection
+    window.open(`/${type}/${id}`, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Search and Settings Header */}
@@ -106,9 +117,17 @@ export default function Dashboard() {
         <div className="relative flex-1 max-w-2xl">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={session === undefined || session === null || !session ? "Please login to search" : "Search..."}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              if (!session) {
+                setIsSearchOpen(false);
+              } else {
+                setIsSearchOpen(true);
+              }
+              // setSearchQuery(e.target.value);
+            }}
+            disabled={session === undefined || session === null || !session}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -229,11 +248,6 @@ export default function Dashboard() {
         )
       }
 
-      {/* Floating Action Button */}
-      {/* <button className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
-        <Plus className="h-6 w-6" />
-      </button> */}
-
       {
         !session && (
           <div
@@ -301,6 +315,12 @@ export default function Dashboard() {
         isOpen={isAccessManagementOpen}
         onClose={() => setIsAccessManagementOpen(false)}
         currentUserRole={userRole}
+      />
+
+      <SearchModal
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        onSelect={handleSearch}
       />
     </div >
   );
