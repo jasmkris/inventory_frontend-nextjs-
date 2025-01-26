@@ -22,6 +22,7 @@ interface ProfileSettingsSidebarProps {
 export default function ProfileSettingsSidebar({ isOpen, onClose, user }: ProfileSettingsSidebarProps) {
   const router = useRouter();
   const handleLogout = async () => {
+    onClose();
     // await signOut({ callbackUrl: `${window.location.origin}/login` });
     await signOut({
       redirect: false,

@@ -3,13 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { IoChevronBack, IoFilter } from 'react-icons/io5';
-import { BiTransfer, BiTrash, BiEdit } from 'react-icons/bi';
+import { BiTransfer, BiTrash, BiEdit, BiPlus } from 'react-icons/bi';
 // import { useSession } from 'next-auth/react';
+import { Clock, Filter } from 'lucide-react';
+import { Select, SelectValue, SelectTrigger, SelectItem, SelectContent } from '@/components/ui/select';
+import { Sheet, SheetHeader, SheetDescription, SheetTitle, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { objectCategories } from '@/lib/utils';
+import { objectService } from '@/services/api';
+import { ObjectHistory } from '@/types/inventory';
 
 interface HistoryItem {
   id: string;
   objectName: string;
-  action: 'MOVED' | 'REMOVED' | 'MODIFIED';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'TRANSIT' | 'REMOVE';
   description: string;
   quantity: number;
   timestamp: Date;
@@ -20,14 +27,17 @@ interface HistoryItem {
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  // const { data: session } = useSession();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [objectSearchTerm, setObjectSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [sortBy, setSortBy] = useState('name');
 
   // Mock data - replace with actual API call
   const historyItems: HistoryItem[] = [
     {
       id: '1',
       objectName: 'Wine Glasses',
-      action: 'MOVED',
+      action: 'MOVE',
       description: 'Moved from Kitchen to Storage',
       quantity: 6,
       timestamp: new Date('2024-01-10T02:30:00'),
@@ -36,7 +46,7 @@ export default function HistoryPage() {
     {
       id: '2',
       objectName: 'Bordeaux 2015',
-      action: 'REMOVED',
+      action: 'REMOVE',
       description: 'Removed from Wine Cellar - Consumed during dinner party',
       quantity: 1,
       timestamp: new Date('2024-01-10T01:15:00'),
@@ -45,7 +55,7 @@ export default function HistoryPage() {
     {
       id: '3',
       objectName: 'Towels',
-      action: 'MOVED',
+      action: 'MOVE',
       description: 'Moved from Laundry to Master Bedroom',
       quantity: 8,
       timestamp: new Date('2024-01-10T11:45:00'),
@@ -54,7 +64,7 @@ export default function HistoryPage() {
     {
       id: '4',
       objectName: 'Garden Tools',
-      action: 'MODIFIED',
+      action: 'UPDATE',
       description: 'Modified in Main Garage - Updated quantity from 3 to 4',
       quantity: 4,
       timestamp: new Date('2024-01-10T10:20:00'),
@@ -63,7 +73,7 @@ export default function HistoryPage() {
     {
       id: '5',
       objectName: 'Pool Chemicals',
-      action: 'REMOVED',
+      action: 'REMOVE',
       description: 'Removed from Pool House - Used for pool maintenance',
       quantity: 2,
       timestamp: new Date('2024-01-10T09:30:00'),
@@ -73,12 +83,18 @@ export default function HistoryPage() {
 
   const getActionIcon = (action: HistoryItem['action']) => {
     switch (action) {
-      case 'MOVED':
+      case 'MOVE':
         return <BiTransfer className="w-5 h-5 text-blue-500" />;
-      case 'REMOVED':
+      case 'REMOVE':
         return <BiTrash className="w-5 h-5 text-red-500" />;
-      case 'MODIFIED':
+      case 'UPDATE':
         return <BiEdit className="w-5 h-5 text-green-500" />;
+      case 'CREATE':
+        return <BiPlus className="w-5 h-5 text-green-500" />;
+      case 'DELETE':
+        return <BiTrash className="w-5 h-5 text-red-500" />;
+      case 'TRANSIT':
+        return <BiTransfer className="w-5 h-5 text-blue-500" />;
     }
   };
 
@@ -91,8 +107,8 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Back to Dashboard Link */}
-      <Link 
-        href="/dashboard" 
+      <Link
+        href="/dashboard"
         className="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6"
       >
         <IoChevronBack className="w-5 h-5 mr-1" />
@@ -106,19 +122,81 @@ export default function HistoryPage() {
       </div>
 
       {/* Search and Filter */}
-      <div className="flex gap-4 mb-6">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search history..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-          <IoFilter className="w-6 h-6 text-gray-600" />
-        </button>
+      <div className="flex items-center gap-2 mb-4">
+        <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search objects name..."
+              value={objectSearchTerm}
+              onChange={(e) => setObjectSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <SheetTrigger asChild>
+            <button className="p-2 border rounded-lg hover:bg-gray-50">
+              <Filter className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Filter Objects</SheetTitle>
+              <SheetDescription>
+                Adjust filters to find specific objects
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="py-4 space-y-6">
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Category</label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem key='ALL' value='ALL'>All Categories</SelectItem>
+                    {objectCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Options */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sort by</label>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: 'name' | 'quantity') => setSortBy(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="quantity">Quantity</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Reset Button */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedCategory('ALL');
+                  setSortBy('name');
+                }}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* History List */}
@@ -150,6 +228,7 @@ export default function HistoryPage() {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500">
+                    <Clock className="w-4 h-4 mr-1" />
                     <span>{new Date(item.timestamp).toLocaleString()}</span>
                     <span className="mx-2">•</span>
                     <span>{item.user.name}</span>

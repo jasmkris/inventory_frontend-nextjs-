@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { objectCategories } from '@/lib/utils';
 
-type Category = 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+type Category = 'TOOLS' | 'GARDEN' | 'AUTOMOTIVE' | 'RED_WINE' | 'WHITE_WINE' | 'SPARKLING_WINE' | 'TEXTILES' | 'TABLEWARE' | 'GLASSWARE' | 'COOKWARE' | 'MAINTENANCE' | 'EQUIPMENT' | 'CONSUMABLE' | 'OTHER';
 
 interface CreateObjectModalProps {
     isOpen: boolean;
@@ -100,10 +101,9 @@ export function CreateObjectModal({ isOpen, onClose, roomId, onSubmit }: CreateO
                             disabled={isLoading}
                             required
                         >
-                            <option value="CONSUMABLE">Consumable</option>
-                            <option value="TEXTILE">Textile</option>
-                            <option value="EQUIPMENT">Equipment</option>
-                            <option value="OTHER">Other</option>
+                            {objectCategories.map((category) => (
+                                <option key={category.value} value={category.value}>{category.label}</option>
+                            ))}
                         </select>
                     </div>
 

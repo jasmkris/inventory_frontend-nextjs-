@@ -36,6 +36,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
 import { Button } from '@/components/ui/button';
 import NotData from '@/components/NotData';
+import { objectCategories } from '@/lib/utils';
+import { ObjectCategory } from '@/types/inventory';
+import { DeleteRoomModal } from '@/components/rooms/DeleteRoomModal';
 
 interface Room {
     id: string;
@@ -201,6 +204,8 @@ export default function RoomsPage() {
         const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
         const menuRef = useRef<HTMLDivElement>(null);
         const buttonRef = useRef<HTMLButtonElement>(null);
+        const [isDeleteRoomVerifyModalOpen, setDeleteRoomVerifyModalOpen] = useState(false);
+        const [deleteRoomName, setDeleteRoomName] = useState('');
 
         // Close menu when clicking outside
         useEffect(() => {
@@ -242,9 +247,6 @@ export default function RoomsPage() {
             setIsLoading(true);
             if (action === 'Edit') {
                 router.push(`/rooms/${selectedRoomId}`);
-                // setIsMenuVisible(false); // Hide the menu after selection
-                // setSelectedRoomId(null);
-
             } else if (action === 'Delete') {
                 try {
                     const response: any = await roomService.deleteRoom(selectedRoomId as string);
@@ -318,36 +320,42 @@ export default function RoomsPage() {
                                                     {room?._count?.objects} items
                                                 </p>
                                             </div>
-                                            <button
-                                                ref={buttonRef}
-                                                // onClick={() => setShowOptions(!showOptions)}
-                                                onClick={(e) => handleOptionsClick(e, room.id)}
-                                                className="ml-auto p-2 hover:bg-gray-100 rounded-full">
-                                                <MoreVertical className="h-5 w-5" />
-                                            </button>
-                                            <div className="relative">
-                                                {isMenuVisible && selectedRoomId === room.id && (
-                                                    <div
-                                                        ref={menuRef}
-                                                        className="absolute right-0 top-5 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[100px]"
-                                                    >
-                                                        <div className='flex flex-col w-full'>
-                                                            <div
-                                                                className='w-full cursor-pointer p-2 text-left text-blue-500 hover:bg-gray-50 border-b border-gray-200'
-                                                                onClick={() => handleMenuItemClick('Edit')}
-                                                            >
-                                                                Edit
-                                                            </div>
-                                                            <div
-                                                                className='w-full cursor-pointer p-2 text-left text-red-500 hover:bg-gray-50'
-                                                                onClick={() => handleMenuItemClick('Delete')}
-                                                            >
-                                                                Delete
-                                                            </div>
+                                            {
+                                                isManager && (
+                                                    <>
+                                                        <button
+                                                            ref={buttonRef}
+                                                            // onClick={() => setShowOptions(!showOptions)}
+                                                            onClick={(e) => handleOptionsClick(e, room.id)}
+                                                            className="ml-auto p-2 hover:bg-gray-100 rounded-full">
+                                                            <MoreVertical className="h-5 w-5" />
+                                                        </button>
+                                                        <div className="relative">
+                                                            {isMenuVisible && selectedRoomId === room.id && (
+                                                                <div
+                                                                    ref={menuRef}
+                                                                    className="absolute right-0 top-5 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[100px]"
+                                                                >
+                                                                    <div className='flex flex-col w-full'>
+                                                                        <div
+                                                                            className='w-full cursor-pointer p-2 text-left text-blue-500 hover:bg-gray-50 border-b border-gray-200'
+                                                                            onClick={() => handleMenuItemClick('Edit')}
+                                                                        >
+                                                                            Edit
+                                                                        </div>
+                                                                        <div
+                                                                            className='w-full cursor-pointer p-2 text-left text-red-500 hover:bg-gray-50'
+                                                                            onClick={() => { setDeleteRoomVerifyModalOpen(true); setDeleteRoomName(room.name) }}
+                                                                        >
+                                                                            Delete
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    </>
+                                                )
+                                            }
                                             <ChevronLeft className="h-5 w-5 text-gray-400 transform rotate-180" />
                                         </div>
                                     </CardContent>
@@ -367,6 +375,15 @@ export default function RoomsPage() {
                         isOpen={isCreateModalOpen}
                         onClose={() => setIsCreateModalOpen(false)}
                         onSubmit={handleCreateRoom}
+                    />
+                    <DeleteRoomModal
+                        isOpen={isDeleteRoomVerifyModalOpen}
+                        onClose={() => {
+                            setDeleteRoomVerifyModalOpen(false);
+                            setSelectedRoom(null);
+                        }}
+                        roomName={deleteRoomName}
+                        onDelete={() => handleMenuItemClick('Delete')}
                     />
                 </div>
             </div>
@@ -400,29 +417,35 @@ export default function RoomsPage() {
 
         const handleCreateObject = async (objectData: {
             name: string;
-            category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+            category: ObjectCategory;
             quantity: number;
             roomId: string;
             description?: string;
         }) => {
             try {
-                const formData = new FormData();
-                Object.entries(objectData).forEach(([key, value]) => {
-                    if (value !== undefined) formData.append(key, value.toString());
-                });
-                await objectService.createObject(formData);
-                toast({
-                    title: "Success",
-                    description: "Object created successfully",
-                });
-                setRooms((prevRooms) =>
-                    prevRooms.map((item) =>
-                        item.id === room.id
-                            ? { ...item, _count: { ...item._count, objects: item._count?.objects ? item._count.objects + 1 : 1 } }
-                            : item
-                    )
-                );
-                setObjects(prevObjects => [...prevObjects, objectData as unknown as Object]);
+                // const formData = new FormData();
+                const response = await objectService.createObject(objectData as any);
+                if (response.error) {
+                    toast({
+                        title: "Error",
+                        description: response.error,
+                        variant: "destructive",
+                    });
+                } else {
+                    toast({
+                        title: "Success",
+                        description: "Object created successfully",
+                    });
+
+                    setRooms((prevRooms) =>
+                        prevRooms.map((item) =>
+                            item.id === room.id
+                                ? { ...item, _count: { ...item._count, objects: item._count?.objects ? item._count.objects + 1 : 1 } }
+                                : item
+                        )
+                    );
+                    setObjects(prevObjects => [...prevObjects, objectData as unknown as Object]);
+                }
             } catch {
                 toast({
                     title: "Error",
@@ -446,12 +469,6 @@ export default function RoomsPage() {
                     return b.quantity - a.quantity;
                 });
         }, [objects, roomSearchTerm, selectedCategory, sortBy]);
-
-        // const handleKeyDown = (e: React.KeyboardEvent) => {
-        //     if (e.key === 'Backspace' || e.key === 'Escape') {
-        //         e.preventDefault(); // Prevent default back behavior
-        //     }
-        // };
 
         const handleDeleteRoom = async () => {
             try {
@@ -534,7 +551,6 @@ export default function RoomsPage() {
         if (isFetching) return <LoadingState />;
 
         return (
-            // <div className="h-full flex flex-col" onKeyDown={handleKeyDown}>
             <div className="h-full flex flex-col">
                 {/* Room Header */}
                 <div className="p-4 border-b">
@@ -549,35 +565,41 @@ export default function RoomsPage() {
                             <h1 className="text-2xl font-semibold">{room.name}</h1>
                             <p className="text-gray-600">{room.description}</p>
                         </div>
-                        <button
-                            onClick={() => setShowOptions(!showOptions)}
-                            className="ml-auto p-2 hover:bg-gray-100 rounded-full">
-                            <MoreVertical className="h-5 w-5" />
-                        </button>
-                        {showOptions && (
-                            <div
-                                ref={optionsRef}
-                                className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
-                            >
-                                <div className="py-1">
+                        {
+                            isManager && (
+                                <>
                                     <button
-                                        onClick={() => {
-                                            setIsSelectionMode(!isSelectionMode);
-                                            setShowOptions(false);
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        {isSelectionMode ? 'Cancel Selection' : 'Select Objects'}
+                                        onClick={() => setShowOptions(!showOptions)}
+                                        className="ml-auto p-2 hover:bg-gray-100 rounded-full">
+                                        <MoreVertical className="h-5 w-5" />
                                     </button>
-                                    <button
-                                        onClick={handleDeleteRoom}
-                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
-                                    >
-                                        Delete All Objects
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                                    {showOptions && (
+                                        <div
+                                            ref={optionsRef}
+                                            className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                                        >
+                                            <div className="py-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsSelectionMode(!isSelectionMode);
+                                                        setShowOptions(false);
+                                                    }}
+                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                                                >
+                                                    {isSelectionMode ? 'Cancel Selection' : 'Select Objects'}
+                                                </button>
+                                                <button
+                                                    onClick={handleDeleteRoom}
+                                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
+                                                >
+                                                    Delete All Objects
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        }
                     </div>
                 </div>
                 {/* Room Content */}
@@ -617,11 +639,10 @@ export default function RoomsPage() {
                                                 <SelectValue placeholder="Select category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="ALL">All Categories</SelectItem>
-                                                <SelectItem value="CONSUMABLE">Consumable</SelectItem>
-                                                <SelectItem value="TEXTILE">Textile</SelectItem>
-                                                <SelectItem value="EQUIPMENT">Equipment</SelectItem>
-                                                <SelectItem value="OTHER">Other</SelectItem>
+                                                <SelectItem key='ALL' value="ALL">All Categories</SelectItem>
+                                                {objectCategories.map((category) => (
+                                                    <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -730,12 +751,9 @@ export default function RoomsPage() {
                     </div>
                 </div>
 
-                {/* Add Item Button (Only visible to managers) */}
-                {/* {isManager && ( */}
                 <button onClick={() => setIsCreateObjectModalOpen(true)} className="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
                     <Plus className="h-6 w-6" />
                 </button>
-                {/* )} */}
 
                 <CreateObjectModal
                     isOpen={isCreateObjectModalOpen}
@@ -750,14 +768,6 @@ export default function RoomsPage() {
 
     if (isLoading) return <LoadingState />;
     if (error) return (
-        // <ErrorState 
-        //     message={error} 
-        //     onRetry={() => {
-        //         setError(null);
-        //         setIsLoading(true);
-        //         fetchRooms(); // Retry fetching rooms
-        //     }} 
-        // />
         <ErrorState
             message={error}
             onRetry={() => window.location.reload()}
@@ -770,19 +780,13 @@ export default function RoomsPage() {
                 <RoomDetail
                     room={selectedRoom}
                     onBack={() => setSelectedRoom(null)}
-                // userRole={userRole}
                 />
             ) : (
                 <RoomsList
                     rooms={rooms}
                     onSelectRoom={setSelectedRoom}
-                    // onCreateRoom={handleCreateRoom}
-                    // onDeleteRoom={handleDeleteRoom}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
-                // userRole={userRole}
-                // isLoading={isLoading}
-                // error={error}
                 />
             )}
         </div>

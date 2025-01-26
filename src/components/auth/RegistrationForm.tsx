@@ -72,6 +72,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
       }
     }
   };
+
 // const handleCaptureSelfie = async () => {
 //   try {
 //     if (videoRef.current && streamRef.current) {
@@ -111,6 +112,7 @@ export function RegistrationForm({ form, onSubmit, isLoading }: RegistrationForm
 //     });
 //   }
 // };
+
   return (
     <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-6">
       <div className="text-center mb-6">

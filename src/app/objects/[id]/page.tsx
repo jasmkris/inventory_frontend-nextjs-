@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { IoChevronBack, IoPencil, IoTrash } from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
@@ -10,12 +10,17 @@ import { useToast } from '@/hooks/use-toast';
 import { NotFound } from '@/components/NotFound';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader } from 'lucide-react';
+import { Loader, MoreVertical } from 'lucide-react';
+import { Category } from '@prisma/client';
+import { ObjectCategory } from '@/types/inventory';
+import { objectCategories } from '@/lib/utils';
+import { MoveToRoomModal } from '@/components/objects/MoveToRoomModal';
+import { Input } from '@/components/ui/input';
 
 interface ObjectDetails {
   id: string;
   name: string;
-  category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+  category: ObjectCategory;
   quantity: number;
   description?: string;
   roomId: string;
@@ -35,7 +40,7 @@ export default function ObjectDetailsPage() {
   const [object, setObject] = useState<ObjectDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState<'object' | 'quantity' | null>(null);
   const [editedObject, setEditedObject] = useState<ObjectDetails | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const { toast } = useToast();
@@ -46,6 +51,10 @@ export default function ObjectDetailsPage() {
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [selectedObjects, setSelectedObjects] = useState<string[]>([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  const [isMoveToRoom, setIsMoveToRoom] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     // Replace with actual API call
@@ -53,7 +62,6 @@ export default function ObjectDetailsPage() {
       try {
         const response = await objectService.getObjectById(params.id as string);
         setObject(response);
-
       } catch {
         setIsLoading(false);
         console.error('Error fetching object:');
@@ -82,60 +90,82 @@ export default function ObjectDetailsPage() {
     }
   }, [object]);
 
-  const handleDelete = async () => {
-    // if (!confirm('Are you sure you want to delete this object?')) return;
-    // let objectIds = await [object?.id as string];
-    // setIsDeleting(true);
-    // try {
-    //   await objectService.multipleObjectsDelete(objectIds);
-    //   router.back();
-    // } catch (error) {
-    //   console.error('Error deleting object:', error);
-    //   setIsDeleting(false);
-    // }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSave = async () => {
     if (!editedObject) return;
-
-    try {
-      setIsLoading(true);
-      // const formData = new FormData();
-      // Object.entries(editedObject).forEach(([key, value]) => {
-      //   if (value !== undefined && value !== null) {
-      //     formData.append(key, value.toString());
-      //   }
-      // });
-
-      await objectService.updateObject(object?.id as string, editedObject);
-      setObject({ ...editedObject, room: rooms.find(room => room.id === editedObject.roomId) as Room });
-      setIsEditing(false);
-      toast({
-        title: "Success",
-        description: "Object updated successfully",
-        variant: "success",
-      });
-    } catch {
+    if (!object) return;
+    if (editedObject.quantity < object.quantity) {
       toast({
         title: "Error",
-        description: "Failed to update object",
+        description: "Quantity cannot be less than original quantity",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      return;
+    } else if (isEditing === 'quantity' && editedObject.quantity > object.quantity) {
+      try {
+        setIsLoading(true);
+        await objectService.updateQuantity(object?.id as string, editedObject.quantity);
+        setObject({ ...editedObject, room: rooms.find(room => room.id === editedObject.roomId) as Room });
+        setIsEditing(null);
+        setObject(prevObject =>
+          prevObject ? {
+            ...prevObject,
+            quantity: editedObject.quantity
+          } : null
+        );
+        toast({
+          title: "Success",
+          description: "Object updated successfully",
+          variant: "success",
+        });
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to update object",
+          variant: "destructive",
+        });
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (isEditing === 'object') {
+      try {
+        setIsLoading(true);
+        await objectService.updateObject(object?.id as string, editedObject);
+        setObject({ ...editedObject, room: rooms.find(room => room.id === editedObject.roomId) as Room });
+        setIsEditing(null);
+        toast({
+          title: "Success",
+          description: "Object updated successfully",
+          variant: "success",
+        });
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to update object",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleCancel = () => {
     setEditedObject(object);
-    setIsEditing(false);
+    setIsEditing(null);
   };
 
-  const handleInputChange = (field: keyof ObjectDetails, value: string | number | 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER' | string) => {
+  const handleInputChange = (field: keyof ObjectDetails, value: string | number | ObjectCategory | string) => {
     setEditedObject(prev => {
       if (!prev) return prev;
       return {
@@ -145,16 +175,7 @@ export default function ObjectDetailsPage() {
     });
   };
 
-  if (isLoading) {
-    return <LoadingState />
-  }
-
-  if (!object) {
-    return <NotFound />;
-  }
-
   const handleDeleteClick = () => {
-    // setObjectToDelete(objectIds);
     setDeleteNote('');
     setIsDeleteModalOpen(true);
   };
@@ -171,11 +192,16 @@ export default function ObjectDetailsPage() {
 
     try {
       setIsDeleteLoading(true);
-      // await objectService.multipleObjectsDelete(objectToDelete, deleteNote);
-      
+      await objectService.removeObject(object?.id as string, quantity, deleteNote);
+      setObject(prevObject =>
+        prevObject ? {
+          ...prevObject,
+          quantity: prevObject.quantity - quantity
+        } : null
+      );
       toast({
         title: "Success",
-        description: `${objectToDelete.length} objects deleted successfully`,
+        description: `Object removed successfully`,
       });
 
       setSelectedObjects([]);
@@ -192,17 +218,95 @@ export default function ObjectDetailsPage() {
     }
   };
 
+  const handleMoveSuccess = (objectId: string, movedQuantity: number) => {
+    setObject(prevObject =>
+      prevObject ? {
+        ...prevObject,
+        quantity: prevObject.quantity - movedQuantity
+      } : null
+    );
+  };
+
+  if (isLoading) {
+    return <LoadingState />
+  }
+
+  if (!object) {
+    return <NotFound />;
+  }
 
   return (
     <>
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6"
+
+        <MoveToRoomModal
+          isOpen={isMoveToRoom}
+          onClose={() => setIsMoveToRoom(false)}
+          objectId={object.id}
+          currentQuantity={object.quantity}
+          rooms={rooms}
+          currentRoomId={object.roomId}
+          onMoveSuccess={(quantity) => handleMoveSuccess(object.id, quantity)}
+        />
+
+        <div
+          className="inline-flex items-center relative hover:text-blue-600 mb-6 flex-row justify-between w-full"
         >
-          <IoChevronBack className="w-5 h-5 mr-1" />
-          Back to Objects
-        </button>
+          <button onClick={() => router.back()} className="flex items-center text-blue-500">
+            <IoChevronBack className="w-5 h-5 mr-1" />
+            Back to Objects
+          </button>
+          <button
+            onClick={() => setShowOptions(!showOptions)}
+            className="ml-auto p-2 hover:bg-gray-100 rounded-full">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+          {showOptions && (
+            <div
+              ref={optionsRef}
+              className="absolute right-0 top-8 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+            >
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setIsMoveToRoom(true);
+                    setShowOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Move to Room
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing('object');
+                    setShowOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-gray-100"
+                >
+                  Modify Object
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing('quantity');
+                    setShowOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-gray-100"
+                >
+                  Update quantity
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteClick();
+                    setShowOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
+                >
+                  Remove Object
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-start justify-between mb-6">
@@ -220,7 +324,7 @@ export default function ObjectDetailsPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              {isEditing ? (
+              {isEditing && (
                 <>
                   <button
                     onClick={handleSave}
@@ -236,21 +340,7 @@ export default function ObjectDetailsPage() {
                     Cancel
                   </button>
                 </>
-              ) : (
-                <button
-                  onClick={handleEdit}
-                  className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <IoPencil className="w-5 h-5" />
-                </button>
               )}
-              <button
-                onClick={() => handleDeleteClick()}
-                disabled={isDeleting}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <IoTrash className="w-5 h-5" />
-              </button>
             </div>
           </div>
 
@@ -258,7 +348,7 @@ export default function ObjectDetailsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                {isEditing ? (
+                {isEditing === 'object' ? (
                   <input
                     type="text"
                     value={editedObject?.name || ''}
@@ -272,16 +362,17 @@ export default function ObjectDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                {isEditing ? (
+                {isEditing === 'object' ? (
                   <select
                     value={editedObject?.category || ''}
-                    onChange={(e) => handleInputChange('category', e.target.value as 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER')}
+                    onChange={(e) => handleInputChange('category', e.target.value as ObjectCategory)}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="CONSUMABLE">Consumable</option>
-                    <option value="TEXTILE">Textile</option>
-                    <option value="EQUIPMENT">Equipment</option>
-                    <option value="OTHER">Other</option>
+                    {
+                      objectCategories.map((category) => (
+                        <option key={category.value} value={category.value}>{category.label}</option>
+                      ))
+                    }
                   </select>
                 ) : (
                   <div className="text-gray-900">{object.category}</div>
@@ -290,13 +381,36 @@ export default function ObjectDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                {isEditing ? (
+                {isEditing === 'quantity' ? (
                   <input
                     type="number"
-                    min="1"
-                    value={editedObject?.quantity || 0}
-                    onChange={(e) => handleInputChange('quantity', parseInt(e.target.value))}
+                    min={object.quantity}
+                    value={editedObject?.quantity}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value < object.quantity) {
+                        handleInputChange('quantity', object.quantity);
+                      } else {
+                        handleInputChange('quantity', value);
+                      }
+                    }}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    onKeyDown={(e) => {
+                      // Prevent typing non-numeric characters
+                      if (!/[\d\b]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+
+                      // Prevent if resulting value would be less than original quantity
+                      const currentValue = String(editedObject?.quantity || '');
+                      const newValue = e.key === 'Backspace'
+                        ? currentValue.slice(0, -1)
+                        : currentValue + e.key;
+
+                      if (Number(newValue) < object.quantity && !['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                 ) : (
                   <div className="text-gray-900">{object.quantity}</div>
@@ -307,7 +421,7 @@ export default function ObjectDetailsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                {isEditing ? (
+                {isEditing === 'object' ? (
                   <textarea
                     value={editedObject?.description || ''}
                     onChange={(e) => handleInputChange('description', e.target.value as string)}
@@ -321,7 +435,7 @@ export default function ObjectDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
-                {isEditing ? (
+                {/* {isEditing === 'object' ? (
                   <select
                     value={editedObject?.roomId || ''}
                     onChange={(e) => handleInputChange('roomId', e.target.value as string)}
@@ -333,9 +447,9 @@ export default function ObjectDetailsPage() {
                       </option>
                     ))}
                   </select>
-                ) : (
-                  <div className="text-gray-900">{object.room.name}</div>
-                )}
+                ) : ( */}
+                <div className="text-gray-900">{object.room.name}</div>
+                {/* )} */}
               </div>
 
               <div>
@@ -359,15 +473,41 @@ export default function ObjectDetailsPage() {
           </div>
         </div>
       </div>
-      
+
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Confirmation</DialogTitle>
+            <DialogTitle>Remove Confirmation</DialogTitle>
           </DialogHeader>
+          <label className="block text-sm font-medium text-gray-700 mt-4">
+            Please input the quantity to remove
+          </label>
+          <Input
+            type="number"
+            min={1}
+            max={object.quantity}
+            value={quantity}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (value > object.quantity) {
+                setQuantity(object.quantity);
+              } else if (value < 1) {
+                setQuantity(1);
+              } else {
+                setQuantity(value);
+              }
+            }}
+            onKeyDown={(e) => {
+              // Prevent typing non-numeric characters
+              if (!/[\d\b]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            disabled={isLoading}
+          />
           <div className="py-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Please provide a reason for deletion
+              Please provide a reason for removal
             </label>
             <Textarea
               placeholder="e.g., Wine bottle consumed during event"
@@ -385,7 +525,7 @@ export default function ObjectDetailsPage() {
               Cancel
             </button>
             <button
-              onClick={handleConfirmDelete}
+              onClick={() => handleConfirmDelete()}
               className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 ml-2"
               disabled={isDeleteLoading}
             >

@@ -1,4 +1,4 @@
-export type ObjectCategory = 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+export type ObjectCategory = 'TOOLS' | 'GARDEN' | 'AUTOMOTIVE' | 'RED_WINE' | 'WHITE_WINE' | 'SPARKLING_WINE' | 'TEXTILES' | 'TABLEWARE' | 'GLASSWARE' | 'COOKWARE' | 'MAINTENANCE' | 'EQUIPMENT' | 'CONSUMABLE' | 'OTHER';
 
 export interface InventoryObject {
   id: string;
@@ -16,7 +16,7 @@ export interface InventoryObject {
 export interface ObjectHistory {
   id: string;
   objectId: string;
-  action: 'CREATED' | 'MOVED' | 'DELETED' | 'MODIFIED' | 'TRANSIT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'TRANSIT' | 'REMOVE';
   fromRoomId?: string;
   toRoomId?: string;
   quantity?: number;
@@ -24,3 +24,16 @@ export interface ObjectHistory {
   performedBy: string;
   performedAt: Date;
 } 
+
+export interface Object {
+  id: string;
+  name: string;
+  category: ObjectCategory;
+  quantity: number;
+  roomId: string;
+  description?: string;
+  parentObjectId?: string; // For variants
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

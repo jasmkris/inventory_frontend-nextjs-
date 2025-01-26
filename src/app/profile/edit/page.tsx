@@ -44,10 +44,7 @@ export default function EditProfilePage() {
     const { toast } = useToast();
     const [isPageLoading, setIsPageLoading] = useState(true);
     const { data: session, update } = useSession();
-    console.log(session, 'session edit profile');
     
-    const router = useRouter();
-
     const {
         register,
         handleSubmit,
@@ -116,7 +113,6 @@ export default function EditProfilePage() {
                     title: "Success",
                     description: "Profile updated successfully",
                 });
-                console.log(response, response.data, uploadedImagePath, response.data.photoUrl, 'response edit profile');
                 
                 try {
                     await update({
@@ -128,8 +124,6 @@ export default function EditProfilePage() {
                         }
                     });
 
-                    // Log session after update attempt
-                    console.log('After update attempt:', session);
                 } catch (updateError) {
                     console.error('Session update error:', updateError);
                 }

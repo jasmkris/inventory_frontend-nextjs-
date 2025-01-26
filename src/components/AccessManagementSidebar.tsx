@@ -8,6 +8,7 @@ import { userService } from '@/services/api';
 import { Skeleton } from "@/components/ui/skeleton";
 import NotData from '@/components/NotData';
 import { useSession } from 'next-auth/react';
+import { eventEmitter, EVENTS } from '@/lib/eventEmitter';
 
 interface User {
   id: string;
@@ -45,20 +46,58 @@ export default function AccessManagementSidebar({
   const [isInviteButtonShown, setIsInviteButtonShown] = useState(false);
   const [isPendingApprovalLoading, setIsPendingApprovalLoading] = useState(false);
 
-  const getPendingUsers = async () => {
-    const response = await userService.getPendingUsers();
-    if (response) {
-      setActiveUsers(response.filter((user: User) => user.isVerified === true));
-      setPendingUsers(response.filter((user: User) => user.isVerified === false));
-    }
-  };
-
   useEffect(() => {
     if (!isManager) {
       return;
     }
-    getPendingUsers().finally(() => setIsLoading(false));
-  }, []);
+
+    console.log('Setting up event listener'); // Debug log
+
+    const handleRefreshPendingUsers = () => {
+      console.log('Refresh event received'); // Debug log
+      getPendingUsers();
+    };
+
+    eventEmitter.on(EVENTS.REFRESH_PENDING_USERS, handleRefreshPendingUsers);
+
+    // Initial fetch when sidebar opens
+    if (isOpen) {
+      getPendingUsers();
+    }
+
+    return () => {
+      console.log('Cleaning up event listener'); // Debug log
+      eventEmitter.off(EVENTS.REFRESH_PENDING_USERS, handleRefreshPendingUsers);
+    };
+  }, [isOpen]); // Add isOpen to dependencies
+
+  const getPendingUsers = async () => {
+    try {
+      const response = await userService.getPendingUsers();
+      if (response) {
+        setActiveUsers(response.filter((user: User) => user.isVerified === true));
+        setPendingUsers(response.filter((user: User) => user.isVerified === false));
+      }
+      setIsLoading(false);
+    } catch {
+      console.error('Error fetching pending users:');
+    }
+  };
+
+  useEffect(() => {
+    // Function to handle new user registration
+    const handleNewUserRegistration = () => {
+      getPendingUsers();
+    };
+
+    // Subscribe to new user registration events
+    eventEmitter.on('newUserRegistered', handleNewUserRegistration);
+
+    // Cleanup subscription
+    return () => {
+      eventEmitter.off('newUserRegistered', handleNewUserRegistration);
+    };
+  }, []); // Empty dependency array since getPendingUsers is stable
 
   const handleGenerateInviteLink = () => {
     // Generate a unique invite link

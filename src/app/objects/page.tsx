@@ -1,17 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { IoChevronBack, IoChevronForward, IoFilter } from 'react-icons/io5';
+import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
 import { useSession } from 'next-auth/react';
 import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { objectService, roomService } from '@/services/api';
-import { X } from 'lucide-react';
+import { X, Filter } from 'lucide-react';
 import { LoadingState } from '@/components/LoadingState';
 import NotData from '@/components/NotData';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { objectCategories } from '@/lib/utils';
+import { ObjectCategory } from '@/types/inventory';
 
 interface Object {
   id: string;
@@ -27,7 +45,6 @@ interface Room {
 }
 
 export default function ObjectsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const { data: session } = useSession();
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
   const isManager = userRole === 'MANAGER';
@@ -43,6 +60,11 @@ export default function ObjectsPage() {
   const [isLoading, setIsLoading] = useState(false);
   // const [name, setName] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [sortBy, setSortBy] = useState<'name' | 'quantity'>('name');
+  const [objectSearchTerm, setObjectSearchTerm] = useState('');
 
   const getObjects = async () => {
     const objects = await objectService.getObjects();
@@ -61,51 +83,6 @@ export default function ObjectsPage() {
     getObjects();
   }, [])
 
-  // Mock data - replace with actual API call
-  // const objects: Object[] = [
-  //   {
-  //     id: '1',
-  //     name: 'Power Tools Set',
-  //     category: 'Tools',
-  //     room: 'Main Garage',
-  //     quantity: 1,
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Garden Equipment',
-  //     category: 'Garden',
-  //     room: 'Main Garage',
-  //     quantity: 3,
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Spare Tires',
-  //     category: 'Automotive',
-  //     room: 'Main Garage',
-  //     quantity: 4,
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Tool Box',
-  //     category: 'Tools',
-  //     room: 'Main Garage',
-  //     quantity: 2,
-  //   },
-  //   {
-  //     id: '5',
-  //     name: 'Lawn Mower',
-  //     category: 'Garden',
-  //     room: 'Main Garage',
-  //     quantity: 1,
-  //   },
-  //   {
-  //     id: '6',
-  //     name: 'Bordeaux 2015',
-  //     category: 'Red Wine',
-  //     room: 'Wine Cellar',
-  //     quantity: 12,
-  //   },
-  // ];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(selectedRoomId, 'selectedRoomId');
@@ -128,15 +105,29 @@ export default function ObjectsPage() {
     }
   };
 
-  const filteredObjects = objects.filter(object =>
-    object.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    object.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    object.roomName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredObjects = objects.filter(object =>
+  //   object.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //   object.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //   object.roomName?.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
+  const filteredAndSortedObjects = useMemo(() => {
+    return objects
+      .filter(obj => {
+        const matchesSearch = obj.name.toLowerCase().includes(objectSearchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === 'ALL' || obj.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'name') {
+          return a.name.localeCompare(b.name);
+        }
+        return b.quantity - a.quantity;
+      });
+  }, [objects, objectSearchTerm, selectedCategory, sortBy]);
 
   const handleCreateObject = async (objectData: {
     name: string;
-    category: 'CONSUMABLE' | 'TEXTILE' | 'EQUIPMENT' | 'OTHER';
+    category: ObjectCategory;
     quantity: number;
     roomId: string;
     description?: string;
@@ -187,28 +178,90 @@ export default function ObjectsPage() {
         <p className="text-gray-600">View and manage all items</p>
       </div>
 
-      {/* Search Bar with Filter */}
-      <div className="flex gap-4 mb-6">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search objects..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-          <IoFilter className="w-6 h-6 text-gray-600" />
-        </button>
+      {/* Add this filter section */}
+      <div className="flex items-center gap-2 mb-4">
+        <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search objects name..."
+              value={objectSearchTerm}
+              onChange={(e) => setObjectSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <SheetTrigger asChild>
+            <button className="p-2 border rounded-lg hover:bg-gray-50">
+              <Filter className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Filter Objects</SheetTitle>
+              <SheetDescription>
+                Adjust filters to find specific objects
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="py-4 space-y-6">
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Category</label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem key='ALL' value='ALL'>All Categories</SelectItem>
+                    {objectCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Options */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sort by</label>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: 'name' | 'quantity') => setSortBy(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="quantity">Quantity</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Reset Button */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedCategory('ALL');
+                  setSortBy('name');
+                }}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Objects List */}
       <div className="space-y-4">
-        {filteredObjects.length === 0 ? (
+        {filteredAndSortedObjects.length === 0 ? (
           <NotData />
         ) : (
-          filteredObjects.map((object) => (
+          filteredAndSortedObjects.map((object) => (
             <Link
               key={object.id}
               href={`/objects/${object.id}`}

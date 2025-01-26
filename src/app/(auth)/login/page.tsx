@@ -85,7 +85,7 @@ const LoginPage = () => {
         });
         return;
       }
-      if (data.selfie === null) {
+      if (data.selfie === null || data.selfie === undefined || data.selfie === '') {
         toast({
           title: "Error",
           description: "Selfie is required",
@@ -106,34 +106,40 @@ const LoginPage = () => {
         formData.append('selfie', data.selfie);
       }
 
-      const response = await api.post('/auth/register', formData, {
+      await api.post('/auth/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      });
-
-      if (!response.data) {
-        throw new Error('Registration failed');
-      }
-      await register(data);
-      toast({
-        title: "Success",
-        description: "Account created successfully",
-      });
+      }).then((response: any) => {
+        if (!response.data) {
+          throw new Error('Registration failed');
+        }
+        if (response.error) {
+          toast({
+            title: "Error",
+            description: response.error,
+            variant: "destructive",
+          });
+          return;
+        }
+        toast({
+          title: "Success",
+          description: response.data.message,
+        });
+      }).catch((error: any) => {
+        console.log(error.response.data, 'response error');
+        toast({
+          title: "Error",
+          description: error.response.data.error,
+          variant: "destructive",
+        });
+      })
     } catch {
-      // if (error.response.status === 400) {
-      //   toast({
-      //     title: "warning",
-      //     description: "Email already exists",
-      //     variant: "warning",
-      //   });
-      // } else {
       toast({
-        title: "Error",
-        description: "Failed to create account",
-        variant: "destructive",
+        title: "warning",
+        description: "server down",
+        variant: "warning",
       });
-      // }
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -176,7 +182,5 @@ const LoginPage = () => {
     </div>
   );
 };
-
-// ... LoginForm and RegistrationForm components with updated props and validation
 
 export default LoginPage;

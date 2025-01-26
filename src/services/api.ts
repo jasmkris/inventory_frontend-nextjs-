@@ -123,8 +123,7 @@ export const objectService = {
     const response = await api.get('/objects');
     return response.data;
   },
-  createObject: async (objectData: FormData) => {
-    console.log(objectData, 'objectData');
+  createObject: async (objectData: any) => {
     const response = await api.post('/objects', objectData);
     return response.data;
   },
@@ -140,9 +139,25 @@ export const objectService = {
     const response = await api.delete('/objects', { data: { objectIds } });
     return response.data;
   },
+  moveObject: async (objectId: string, roomId: string, quantity: number) => {
+    const response = await api.post(`/objects/${objectId}/move`, { roomId, quantity });
+    return response.data;
+  },
+  updateQuantity: async (objectId: string, quantity: number) => {
+    const response = await api.put(`/objects/${objectId}/quantity`, { quantity });
+    return response.data;
+  },
   updateObject: async (objectId: string, objectData: any) => {
     const response = await api.put(`/objects/${objectId}`, objectData);
     return response.data;
   },
-  // Add other object-related endpoints
+  removeObject: async (objectId: string, quantity: number, deleteNote: string) => {
+    const response = await api.put(`/objects/${objectId}/remove`, { quantity, deleteNote });
+    return response.data;
+  },
+};
+
+// history services
+export const historyService = {
+  
 };
