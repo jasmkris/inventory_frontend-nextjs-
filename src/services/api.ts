@@ -156,8 +156,3 @@ export const objectService = {
     return response.data;
   },
 };
-
-// history services
-export const historyService = {
-  
-};

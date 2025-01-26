@@ -1,85 +1,62 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { IoChevronBack, IoFilter } from 'react-icons/io5';
+import { IoChevronBack } from 'react-icons/io5';
 import { BiTransfer, BiTrash, BiEdit, BiPlus } from 'react-icons/bi';
-// import { useSession } from 'next-auth/react';
 import { Clock, Filter } from 'lucide-react';
 import { Select, SelectValue, SelectTrigger, SelectItem, SelectContent } from '@/components/ui/select';
 import { Sheet, SheetHeader, SheetDescription, SheetTitle, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { objectCategories } from '@/lib/utils';
-import { objectService } from '@/services/api';
-import { ObjectHistory } from '@/types/inventory';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { LoadingState } from '@/components/LoadingState';
+import NotData from '@/components/NotData';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Bearer': 'application/json',
+  },
+});
 
 interface HistoryItem {
   id: string;
   objectName: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE' | 'TRANSIT' | 'REMOVE';
-  description: string;
+  details: string;
   quantity: number;
   timestamp: Date;
-  user: {
-    name: string;
-  };
+  roomName: string;
+  userName: string;
+  objectId: string;
 }
 
-export default function HistoryPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [objectSearchTerm, setObjectSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [sortBy, setSortBy] = useState('name');
+type SortField = 'createdAt' | 'action' | 'objectName' | 'userName' | 'category';
+type DateFilter = 'all' | 'today' | 'week' | 'month';
 
-  // Mock data - replace with actual API call
-  const historyItems: HistoryItem[] = [
-    {
-      id: '1',
-      objectName: 'Wine Glasses',
-      action: 'MOVE',
-      description: 'Moved from Kitchen to Storage',
-      quantity: 6,
-      timestamp: new Date('2024-01-10T02:30:00'),
-      user: { name: 'John Doe' },
-    },
-    {
-      id: '2',
-      objectName: 'Bordeaux 2015',
-      action: 'REMOVE',
-      description: 'Removed from Wine Cellar - Consumed during dinner party',
-      quantity: 1,
-      timestamp: new Date('2024-01-10T01:15:00'),
-      user: { name: 'Sarah Smith' },
-    },
-    {
-      id: '3',
-      objectName: 'Towels',
-      action: 'MOVE',
-      description: 'Moved from Laundry to Master Bedroom',
-      quantity: 8,
-      timestamp: new Date('2024-01-10T11:45:00'),
-      user: { name: 'Maria Garcia' },
-    },
-    {
-      id: '4',
-      objectName: 'Garden Tools',
-      action: 'UPDATE',
-      description: 'Modified in Main Garage - Updated quantity from 3 to 4',
-      quantity: 4,
-      timestamp: new Date('2024-01-10T10:20:00'),
-      user: { name: 'John Doe' },
-    },
-    {
-      id: '5',
-      objectName: 'Pool Chemicals',
-      action: 'REMOVE',
-      description: 'Removed from Pool House - Used for pool maintenance',
-      quantity: 2,
-      timestamp: new Date('2024-01-10T09:30:00'),
-      user: { name: 'Sarah Smith' },
-    },
-  ];
+export default function HistoryPage() {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState<'objectName' | 'userName'>('objectName');
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const response = await api.post('/objects/history');
+      setHistoryItems(response.data);
+      setIsLoading(false);
+    };
+    fetchHistory();
+  }, []);
 
   const getActionIcon = (action: HistoryItem['action']) => {
     switch (action) {
@@ -98,12 +75,59 @@ export default function HistoryPage() {
     }
   };
 
-  const filteredHistory = historyItems.filter(item =>
-    item.objectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAndSortedHistory = [...historyItems]
+    .filter(item => {
+      // Apply all filters
+      const matchesSearch = searchTerm === '' || (
+        searchField === 'objectName'
+          ? item.objectName.toLowerCase().includes(searchTerm.toLowerCase())
+          : item.userName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
+      const matchesDate = (() => {
+        if (dateFilter === 'all') return true;
+
+        const date = new Date(item.timestamp);
+        const now = new Date();
+
+        switch (dateFilter) {
+          case 'today':
+            return date.toDateString() === now.toDateString();
+          case 'week':
+            const weekAgo = new Date(now.setDate(now.getDate() - 7));
+            return date >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+            return date >= monthAgo;
+          default:
+            return true;
+        }
+      })();
+
+      // Return true only if all filters match
+      return matchesSearch && matchesDate;
+    })
+    .sort((a, b) => {
+      const multiplier = sortOrder === 'asc' ? 1 : -1;
+
+      switch (sortBy) {
+        case 'createdAt':
+          return multiplier * (new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        case 'action':
+          return multiplier * a.action.localeCompare(b.action);
+        case 'objectName':
+          return multiplier * a.objectName.localeCompare(b.objectName);
+        case 'userName':
+          return multiplier * a.userName.localeCompare(b.userName);
+        case 'category':
+          return multiplier * (a.roomName?.localeCompare(b.roomName) ?? 0);
+        default:
+          return 0;
+      }
+    });
+
+  if (isLoading) return <LoadingState />;
+  if (filteredAndSortedHistory.length === 0) return <NotData />;
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Back to Dashboard Link */}
@@ -125,19 +149,33 @@ export default function HistoryPage() {
       <div className="flex items-center gap-2 mb-4">
         <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
           <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search objects name..."
-              value={objectSearchTerm}
-              onChange={(e) => setObjectSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select
+                value={searchField}
+                onValueChange={(value: 'objectName' | 'userName') => setSearchField(value)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Search by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="objectName">Object Name</SelectItem>
+                  <SelectItem value="userName">User Name</SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                placeholder={`Search by ${searchField === 'objectName' ? 'object name' : 'user name'}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Filter className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+            </div>
           </div>
-          <SheetTrigger asChild>
-            <button className="p-2 border rounded-lg hover:bg-gray-50">
-              <Filter className="h-5 w-5" />
-            </button>
-          </SheetTrigger>
           <SheetContent side="right" className="w-80">
             <SheetHeader>
               <SheetTitle>Filter Objects</SheetTitle>
@@ -147,38 +185,58 @@ export default function HistoryPage() {
             </SheetHeader>
 
             <div className="py-4 space-y-6">
-              {/* Category Filter */}
+              {/* Date Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
+                <label className="text-sm font-medium">Date Range</label>
                 <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
+                  value={dateFilter}
+                  onValueChange={(value: DateFilter) => setDateFilter(value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select date range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem key='ALL' value='ALL'>All Categories</SelectItem>
-                    {objectCategories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
-                    ))}
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">Last 7 Days</SelectItem>
+                    <SelectItem value="month">Last 30 Days</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Sort Options */}
+              {/* Sort Field */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sort by</label>
                 <Select
                   value={sortBy}
-                  onValueChange={(value: 'name' | 'quantity') => setSortBy(value)}
+                  onValueChange={(value: SortField) => setSortBy(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="quantity">Quantity</SelectItem>
+                    <SelectItem value="createdAt">Date</SelectItem>
+                    <SelectItem value="action">Action</SelectItem>
+                    <SelectItem value="objectName">Object Name</SelectItem>
+                    <SelectItem value="userName">User Name</SelectItem>
+                    <SelectItem value="category">Category</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Order */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sort Order</label>
+                <Select
+                  value={sortOrder}
+                  onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Newest First</SelectItem>
+                    <SelectItem value="desc">Oldest First</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -188,11 +246,14 @@ export default function HistoryPage() {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setSelectedCategory('ALL');
-                  setSortBy('name');
+                  setDateFilter('all');
+                  setSortBy('createdAt');
+                  setSortOrder('desc');
+                  setSearchTerm('');
+                  setSearchField('objectName');
                 }}
               >
-                Reset Filters
+                Reset All Filters
               </Button>
             </div>
           </SheetContent>
@@ -201,10 +262,13 @@ export default function HistoryPage() {
 
       {/* History List */}
       <div className="space-y-4">
-        {filteredHistory.map((item) => (
+        {filteredAndSortedHistory.map((item) => (
           <div
-            key={item.id}
-            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            key={`${item.id}-${item.timestamp}`}
+            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => {
+              router.push(`/history/${item.objectId}`);
+            }}
           >
             <div className="p-4 sm:p-6">
               <div className="flex items-start gap-4">
@@ -218,7 +282,7 @@ export default function HistoryPage() {
                         {item.objectName}
                       </h2>
                       <p className="text-gray-600 mt-1">
-                        {item.description}
+                        {item.details}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -231,7 +295,7 @@ export default function HistoryPage() {
                     <Clock className="w-4 h-4 mr-1" />
                     <span>{new Date(item.timestamp).toLocaleString()}</span>
                     <span className="mx-2">•</span>
-                    <span>{item.user.name}</span>
+                    <span>{item.userName}</span>
                   </div>
                 </div>
               </div>
