@@ -14,7 +14,6 @@ import { Loader } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { userService } from '@/services/api';
 import { LoadingState } from '@/components/LoadingState';
-import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -92,7 +91,7 @@ export default function EditProfilePage() {
             if (imageFile) {
                 const formData = new FormData();
                 formData.append('file', imageFile); // Change 'image' to 'file' to match backend
-                const imageResponse: any = await userService.uploadProfileImage(formData);
+                const imageResponse = await userService.uploadProfileImage(formData);
                 uploadedImagePath = imageResponse.imageUrl;
             }
 
@@ -107,7 +106,7 @@ export default function EditProfilePage() {
                 ...(uploadedImagePath && { image: uploadedImagePath })
             };
 
-            const response: any = await userService.updateProfile(updateData);
+            const response = await userService.updateProfile(updateData);
             if (response.status === 200) {
                 toast({
                     title: "Success",
@@ -130,14 +129,14 @@ export default function EditProfilePage() {
             } else {
                 toast({
                     title: "Error",
-                    description: response?.error || "Failed to update profile",
+                    description: response?.data?.error || "Failed to update profile",
                     variant: "destructive",
                 });
             }
-        } catch (error: any) {
+        } catch {
             toast({
                 title: "Error",
-                description: error.response?.data?.message || "Failed to update profile",
+                description: "Failed to update profile",
                 variant: "destructive",
             });
         } finally {

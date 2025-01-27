@@ -19,8 +19,8 @@ export const socket = io(SOCKET_URL, {
 });
 
 // Suppress WebSocket connection errors from showing in the console
-const originalConsoleError = console.error;
-console.error = (...args) => {
+const originalConsoleError = console.log;
+console.log = (...args) => {
   if (
     typeof args[0] === 'string' && 
     (args[0].includes('WebSocket connection') || 

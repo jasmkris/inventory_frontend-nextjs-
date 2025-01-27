@@ -8,7 +8,6 @@ import { Select, SelectValue, SelectTrigger, SelectItem, SelectContent } from '@
 import { Sheet, SheetHeader, SheetDescription, SheetTitle, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { LoadingState } from '@/components/LoadingState';
 import { useParams } from 'next/navigation';
 
@@ -46,7 +45,6 @@ export default function ObjectHistoryPage() {
   const [searchField, setSearchField] = useState<'objectName' | 'userName'>('objectName');
   const [isLoading, setIsLoading] = useState(true);
   const [objectName, setObjectName] = useState('UNKNOWN');
-  const router = useRouter();
   const { id } = useParams();
 
   useEffect(() => {
@@ -55,16 +53,15 @@ export default function ObjectHistoryPage() {
       setHistoryItems(response.data);
       setIsLoading(false);
     };
-    fetchHistory();
-  }, []);
-
-  useEffect(() => {
     const fetchObject = async () => {
-      const response = await api.post(`/objects/${id}`);
+      const response = await api.post(`/objects/${id}/details`);
       setObjectName(response.data.name);
+      fetchHistory();
+      setIsLoading(false);
     };
     fetchObject();
-  }, []);
+  }, [id]);
+
 
   const getActionIcon = (action: HistoryItem['action']) => {
     switch (action) {

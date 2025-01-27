@@ -62,7 +62,7 @@ export const userService = {
     const response = await api.post('/users/profile/photo', formData);
     return response.data;
   },
-  updateProfile: async (data: any) => {
+  updateProfile: async (data: object) => {
     const response = await api.put('/users/profile', data);
     return response;
   },
@@ -123,7 +123,7 @@ export const objectService = {
     const response = await api.get('/objects');
     return response.data;
   },
-  createObject: async (objectData: any) => {
+  createObject: async (objectData: object) => {
     const response = await api.post('/objects', objectData);
     return response.data;
   },
@@ -147,7 +147,7 @@ export const objectService = {
     const response = await api.put(`/objects/${objectId}/quantity`, { quantity });
     return response.data;
   },
-  updateObject: async (objectId: string, objectData: any) => {
+  updateObject: async (objectId: string, objectData: object) => {
     const response = await api.put(`/objects/${objectId}`, objectData);
     return response.data;
   },

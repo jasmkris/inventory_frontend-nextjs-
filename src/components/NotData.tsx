@@ -34,7 +34,7 @@ const NotData = () => {
         transition={{ delay: 0.4 }}
         className="text-gray-500 text-center max-w-md mb-6"
       >
-        There's nothing here yet. Data will appear once it's available.
+        There is nothing here yet. Data will appear once it is available.
       </motion.p>
 
       <motion.div

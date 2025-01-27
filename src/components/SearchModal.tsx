@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 interface SearchModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSelect: (item: any, type: 'objects' | 'rooms') => void;
+    onSelect: (id: string, type: 'objects' | 'rooms') => void;
 }
 
 function SearchSkeleton() {

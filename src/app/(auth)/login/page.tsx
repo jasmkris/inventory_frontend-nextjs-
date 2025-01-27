@@ -16,7 +16,6 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { RegistrationForm } from '@/components/auth/RegistrationForm';
 import axios from 'axios';
 import { useAuth } from '@/contexts/auth-context';
-import { useSearchParams } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -28,10 +27,17 @@ const api = axios.create({
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login, register } = useAuth();
-
-  const searchParams = useSearchParams();
+  const { login } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+
+  useEffect(() => {
+    // Parse query parameters from the URL
+    const searchParams = new URLSearchParams(window.location.search);
+    const inviteParam = searchParams.get('invite');
+    if (inviteParam) {
+      setActiveTab('register');
+    }
+  }, []); // Only run on the client side after mount
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -54,25 +60,20 @@ const LoginPage = () => {
   });
 
   const onLoginSubmit = async (data: LoginFormData) => {
-    try {
-      setIsLoading(true);
-      const response = await api.post('/auth/login', data);
-      if (response.data) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
-        await login(data.email, data.password);
-      }
-    } catch (error: any) {
+    setIsLoading(true);
+    await api.post('/auth/login', data).then(() => {
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
+      login(data.email, data.password);
+    }).catch((error) => {
       toast({
         title: "Error",
         description: error.response.data.error,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
+    })
   };
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
@@ -110,27 +111,26 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }).then((response: any) => {
+      }).then((response) => {
         if (!response.data) {
           throw new Error('Registration failed');
         }
-        if (response.error) {
+        if (response?.data?.error) {
           toast({
             title: "Error",
-            description: response.error,
+            description: response?.data?.error,
             variant: "destructive",
           });
           return;
         }
         toast({
           title: "Success",
-          description: response.data.message,
+          description: response?.data?.message,
         });
-      }).catch((error: any) => {
-        console.log(error.response.data, 'response error');
+      }).catch((error) => {
         toast({
           title: "Error",
-          description: error.response.data.error,
+          description: error?.response?.data?.error,
           variant: "destructive",
         });
       })
@@ -145,14 +145,6 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Check for invite parameter and switch to register tab
-    const inviteParam = searchParams.get('invite');
-    if (inviteParam) {
-      setActiveTab("register");
-    }
-  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 flex flex-col">

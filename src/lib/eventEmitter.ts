@@ -1,4 +1,4 @@
-type EventCallback = (...args: any[]) => void;
+type EventCallback = (...args: []) => void;
 
 class EventEmitter {
   private events: { [key: string]: EventCallback[] } = {};
@@ -15,7 +15,7 @@ class EventEmitter {
     this.events[event] = this.events[event].filter(cb => cb !== callback);
   }
 
-  emit(event: string, ...args: any[]) {
+  emit(event: string, ...args: []) {
     if (!this.events[event]) return;
     this.events[event].forEach(callback => callback(...args));
   }

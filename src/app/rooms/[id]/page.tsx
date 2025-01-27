@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { IoChevronBack } from 'react-icons/io5';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,6 @@ import { NotFound } from '@/components/NotFound';
 
 export default function RoomDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const [room, setRoom] = useState<Room | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +24,7 @@ export default function RoomDetailPage() {
         const data = await roomService.getRoomById(params.id as string);
         setRoom(data);
         setEditedRoom(data);
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to fetch room details",
@@ -42,20 +41,20 @@ export default function RoomDetailPage() {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      const response: any = await roomService.updateRoom(params.id as string, editedRoom);
-      if (response.error) {
+      const response = await roomService.updateRoom(params.id as string, editedRoom);
+      if (response?.data?.error) {
         toast({
           title: "Error",
-          description: response.error,
+          description: response.data.error,
           variant: "destructive",
         });
       } else {
         toast({
           title: "Success",
-          description: response.data.message ? response.data.message : response?.error,
+          description: response.data.message ? response.data.message : response?.data?.error,
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update room",

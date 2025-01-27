@@ -17,7 +17,6 @@ import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
 import { eventEmitter, EVENTS } from '@/lib/eventEmitter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchModal } from '@/components/SearchModal';
-import { useRouter } from 'next/navigation';
 
 const historyApi = process.env.NEXT_PUBLIC_API_URL;
 const api = axios.create({
@@ -66,7 +65,6 @@ const FormattedDate = ({ dateString }: { dateString: string }) => {
 };
 
 export default function Dashboard() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAccessManagementOpen, setIsAccessManagementOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +73,6 @@ export default function Dashboard() {
   const [isHovered, setIsHovered] = useState(false);
   const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
   const isManager = userRole === 'MANAGER';
-  const router = useRouter();
 
   const handleAccessManagementClick = () => {
     console.log('Access Management clicked'); // Debug log
@@ -92,7 +89,7 @@ export default function Dashboard() {
         setHistory(Array.isArray(response.data.data) ? response.data.data : []);
         setIsLoading(false);
       }
-    } catch (error) {
+    } catch {
       setHistory([]);
       setIsLoading(false);
     }
@@ -118,14 +115,12 @@ export default function Dashboard() {
           <input
             type="text"
             placeholder={session === undefined || session === null || !session ? "Please login to search" : "Search..."}
-            value={searchQuery}
-            onChange={(e) => {
+            onFocus={() => {
               if (!session) {
                 setIsSearchOpen(false);
               } else {
                 setIsSearchOpen(true);
               }
-              // setSearchQuery(e.target.value);
             }}
             disabled={session === undefined || session === null || !session}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"

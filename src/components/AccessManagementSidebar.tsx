@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { userService } from '@/services/api';
 import { Skeleton } from "@/components/ui/skeleton";
 import NotData from '@/components/NotData';
-import { useSession } from 'next-auth/react';
 import { eventEmitter, EVENTS } from '@/lib/eventEmitter';
 
 interface User {
@@ -33,10 +32,6 @@ export default function AccessManagementSidebar({
   onClose,
   currentUserRole,
 }: AccessManagementSidebarProps) {
-  const { data: session } = useSession();
-  const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
-  const isManager = userRole === 'MANAGER';
-
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [inviteLink, setInviteLink] = useState('');
@@ -47,9 +42,6 @@ export default function AccessManagementSidebar({
   const [isPendingApprovalLoading, setIsPendingApprovalLoading] = useState(false);
 
   useEffect(() => {
-    if (!isManager) {
-      return;
-    }
 
     console.log('Setting up event listener'); // Debug log
 

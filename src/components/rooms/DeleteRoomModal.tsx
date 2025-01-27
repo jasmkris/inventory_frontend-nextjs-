@@ -32,7 +32,7 @@ export function DeleteRoomModal({ isOpen, onClose, roomName, onDelete }: DeleteR
         description: "Room deleted successfully",
       });
       onClose();
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete room",

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -18,12 +18,17 @@ import { Input } from '@/components/ui/input';
 import { objectService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
+interface Room {
+    id: string;
+    name: string;
+}
+
 interface MoveToRoomModalProps {
     isOpen: boolean;
     onClose: () => void;
     objectId: string;
     currentQuantity: number;
-    rooms: any[];
+    rooms: Room[];
     currentRoomId: string;
     onMoveSuccess: (movedQuantity: number) => void;
 }
@@ -45,7 +50,7 @@ export function MoveToRoomModal({ isOpen, onClose, objectId, currentQuantity, ro
             });
             onMoveSuccess(quantity);
             onClose();
-        } catch (error) {
+        } catch {
             toast({
                 title: "Error",
                 description: "Failed to move object",

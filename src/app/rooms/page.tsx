@@ -28,9 +28,8 @@ import { useRouter } from 'next/navigation';
 // import { RoomFilter } from '@/components/RoomFilter';
 // import { RoomActions } from '@/components/RoomActions';
 import { LoadingState } from '@/components/LoadingState';
-import { ErrorState } from '@/components/ErrorState';
 import { objectService, roomService } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 import { CreateRoomModal } from '@/components/rooms/CreateRoomModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateObjectModal } from '@/components/objects/CreateObjectModal';
@@ -92,12 +91,9 @@ export default function RoomsPage() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-    // const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [objects, setObjects] = useState<Object[]>([]);
-    // const userRole = session?.user?.role || 'EMPLOYEE';
     const userRole = (session?.user?.role || 'EMPLOYEE') as 'EMPLOYEE' | 'MANAGER';
     const isManager = userRole === 'MANAGER';
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -107,23 +103,13 @@ export default function RoomsPage() {
     // Fetch rooms only once on component mount
     useEffect(() => {
         const fetchRooms = async () => {
-            try {
-                setIsLoading(true);
-                const data: any = await roomService.getRooms();
-                setRooms(data);
-            } catch {
-                toast({
-                    title: "Error",
-                    description: "Failed to fetch rooms",
-                    variant: "destructive",
-                });
-            } finally {
-                setIsLoading(false);
-            }
+            setIsLoading(true);
+            const data = await roomService.getRooms();
+            setRooms(data);
+            setIsLoading(false);
         };
-
         fetchRooms();
-    }, []); // Remove searchTerm dependency
+    }, []);
 
     const filteredRooms = useMemo(() =>
         rooms.filter(room =>
@@ -144,11 +130,11 @@ export default function RoomsPage() {
         }
 
         try {
-            const newRoom: any = await roomService.createRoom(roomData);
-            if (newRoom.error) {
+            const newRoom = await roomService.createRoom(roomData);
+            if (newRoom?.data?.error) {
                 toast({
                     title: "Error",
-                    description: newRoom.error,
+                    description: newRoom?.data?.error,
                     variant: "destructive",
                 });
             } else {
@@ -190,8 +176,8 @@ export default function RoomsPage() {
     // }, [selectedRoom?.id, searchTerm]);
 
     // const RoomsList = ({ rooms, onSelectRoom, onCreateRoom, onDeleteRoom, searchTerm, onSearchChange, userRole, isLoading, error }: {
-    const RoomsList = ({ rooms, onSelectRoom, searchTerm, onSearchChange }: {
-        rooms: Room[];
+    const RoomsList = ({ onSelectRoom, searchTerm, onSearchChange }: {
+        // rooms: Room[];
         onSelectRoom: (room: Room | null) => void;
         searchTerm: string;
         onSearchChange: (searchTerm: string) => void;
@@ -249,18 +235,18 @@ export default function RoomsPage() {
                 router.push(`/rooms/${selectedRoomId}`);
             } else if (action === 'Delete') {
                 try {
-                    const response: any = await roomService.deleteRoom(selectedRoomId as string);
-                    if (response.error) {
+                    const response = await roomService.deleteRoom(selectedRoomId as string);
+                    if (response?.data?.error) {
                         toast({
                             title: "Error",
-                            description: response.error,
+                            description: response?.data?.error,
                             variant: "destructive",
                         });
                     } else {
                         setRooms(prev => prev.filter(room => room.id !== selectedRoomId));
                         toast({
                             title: "Success",
-                            description: response.data.message ? response.data.message : response?.error,
+                            description: response.data.message ? response.data.message : response?.data?.error,
                         });
                     }
                 } catch {
@@ -424,11 +410,11 @@ export default function RoomsPage() {
         }) => {
             try {
                 // const formData = new FormData();
-                const response = await objectService.createObject(objectData as any);
-                if (response.error) {
+                const response = await objectService.createObject(objectData);
+                if (response?.data?.error) {
                     toast({
                         title: "Error",
-                        description: response.error,
+                        description: response?.data?.error,
                         variant: "destructive",
                     });
                 } else {
@@ -468,16 +454,16 @@ export default function RoomsPage() {
                     }
                     return b.quantity - a.quantity;
                 });
-        }, [objects, roomSearchTerm, selectedCategory, sortBy]);
+        }, [roomSearchTerm, selectedCategory, sortBy]);
 
         const handleDeleteRoom = async () => {
             try {
                 setIsLoading(true);
-                const response: any = await objectService.allObjectsDelete(room.id);
-                if (response.error) {
+                const response = await objectService.allObjectsDelete(room.id);
+                if (response?.data?.error) {
                     toast({
                         title: "Error",
-                        description: response.error,
+                        description: response?.data?.error,
                         variant: "destructive",
                     });
                 } else {
@@ -496,17 +482,18 @@ export default function RoomsPage() {
                     );
                     toast({
                         title: "Success",
-                        description: response.data.message ? response.data.message : response?.error + ' Totally ' + response?.data?.deletedCount + ' objects deleted',
+                        description: response.data.message ? response.data.message : response?.data?.error + ' Totally ' + response?.data?.deletedCount + ' objects deleted',
                     });
                     onBack();
                 }
                 setIsLoading(false);
-            } catch (error) {
+            } catch {
                 toast({
                     title: "Error",
                     description: "Failed to delete room",
                     variant: "destructive",
                 });
+                setIsLoading(false);
             }
         };
 
@@ -538,7 +525,7 @@ export default function RoomsPage() {
                 setSelectedObjects([]);
                 setIsSelectionMode(false);
                 setIsDeleteLoading(false);
-            } catch (error) {
+            } catch {
                 toast({
                     title: "Error",
                     description: "Failed to delete objects",
@@ -767,12 +754,12 @@ export default function RoomsPage() {
     };
 
     if (isLoading) return <LoadingState />;
-    if (error) return (
-        <ErrorState
-            message={error}
-            onRetry={() => window.location.reload()}
-        />
-    );
+    // if (error) return (
+    //     <ErrorState
+    //         message={error}
+    //         onRetry={() => window.location.reload()}
+    //     />
+    // );
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -783,7 +770,7 @@ export default function RoomsPage() {
                 />
             ) : (
                 <RoomsList
-                    rooms={rooms}
+                    // rooms={rooms}
                     onSelectRoom={setSelectedRoom}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}

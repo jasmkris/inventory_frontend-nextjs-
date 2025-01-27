@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { IoChevronBack, IoPencil, IoTrash } from 'react-icons/io5';
+import { IoChevronBack} from 'react-icons/io5';
 import { BiCube } from 'react-icons/bi';
 import { objectService, roomService } from '@/services/api';
 import { LoadingState } from '@/components/LoadingState';
@@ -11,7 +11,6 @@ import { NotFound } from '@/components/NotFound';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader, MoreVertical } from 'lucide-react';
-import { Category } from '@prisma/client';
 import { ObjectCategory } from '@/types/inventory';
 import { objectCategories } from '@/lib/utils';
 import { MoveToRoomModal } from '@/components/objects/MoveToRoomModal';
@@ -39,7 +38,6 @@ export default function ObjectDetailsPage() {
   const router = useRouter();
   const [object, setObject] = useState<ObjectDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState<'object' | 'quantity' | null>(null);
   const [editedObject, setEditedObject] = useState<ObjectDetails | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -47,10 +45,7 @@ export default function ObjectDetailsPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteNote, setDeleteNote] = useState('');
-  const [objectToDelete, setObjectToDelete] = useState<string[]>([]);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  const [selectedObjects, setSelectedObjects] = useState<string[]>([]);
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const [isMoveToRoom, setIsMoveToRoom] = useState(false);
@@ -204,8 +199,6 @@ export default function ObjectDetailsPage() {
         description: `Object removed successfully`,
       });
 
-      setSelectedObjects([]);
-      setIsSelectionMode(false);
       setIsDeleteModalOpen(false);
     } catch {
       toast({

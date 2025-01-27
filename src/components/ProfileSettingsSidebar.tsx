@@ -3,7 +3,7 @@
 // import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { IoClose } from 'react-icons/io5';
-import { FiUser, FiKey, FiLogOut, FiChevronRight } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiChevronRight } from 'react-icons/fi';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
